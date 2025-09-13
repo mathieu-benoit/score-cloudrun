@@ -15,22 +15,23 @@
 package convert
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"maps"
 	"os"
 	"path/filepath"
 
 	"github.com/score-spec/score-go/framework"
 	scoretypes "github.com/score-spec/score-go/types"
-	"gopkg.in/yaml.v3"
 
 	"github.com/score-spec/score-cloudrun/internal/state"
 )
 
-func Workload(currentState *state.State, workloadName string) (map[string]interface{}, error) {
+func Workload(currentState *state.State, workloadName string) (string, error) {
 	resOutputs, err := currentState.GetResourceOutputForWorkload(workloadName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate outputs: %w", err)
+		return "", fmt.Errorf("failed to generate outputs: %w", err)
 	}
 	sf := framework.BuildSubstitutionFunction(currentState.Workloads[workloadName].Spec.Metadata, resOutputs)
 
@@ -38,11 +39,11 @@ func Workload(currentState *state.State, workloadName string) (map[string]interf
 	containers := maps.Clone(spec.Containers)
 	for containerName, container := range containers {
 		if container.Variables, err = convertContainerVariables(container.Variables, sf); err != nil {
-			return nil, fmt.Errorf("workload: %s: container: %s: variables: %w", workloadName, containerName, err)
+			return "", fmt.Errorf("workload: %s: container: %s: variables: %w", workloadName, containerName, err)
 		}
 
 		if container.Files, err = convertContainerFiles(container.Files, currentState.Workloads[workloadName].File, sf); err != nil {
-			return nil, fmt.Errorf("workload: %s: container: %s: files: %w", workloadName, containerName, err)
+			return "", fmt.Errorf("workload: %s: container: %s: files: %w", workloadName, containerName, err)
 		}
 		containers[containerName] = container
 	}
@@ -52,25 +53,53 @@ func Workload(currentState *state.State, workloadName string) (map[string]interf
 		resUid := framework.NewResourceUid(workloadName, resName, res.Type, res.Class, res.Id)
 		resState, ok := currentState.Resources[resUid]
 		if !ok {
-			return nil, fmt.Errorf("workload '%s': resource '%s' (%s) is not primed", workloadName, resName, resUid)
+			return "", fmt.Errorf("workload '%s': resource '%s' (%s) is not primed", workloadName, resName, resUid)
 		}
 		res.Params = resState.Params
 		resources[resName] = res
 	}
 	spec.Resources = resources
 
-	// ===============================================================================
-	// TODO: HERE IS WHERE YOU MAY CONVERT THE WORKLOAD INTO YOUR TARGET MANIFEST TYPE
-	// ===============================================================================
-
-	raw, err := yaml.Marshal(spec)
+	// Convert the Score workload to a Cloud Run Service manifest
+	cloudRunServiceManifest, err := convertToCloudRunService(spec, workloadName)
 	if err != nil {
-		return nil, fmt.Errorf("workload: %s: failed to serialise manifest: %w", workloadName, err)
+		return "", fmt.Errorf("workload: %s: failed to convert to Terraform: %w", workloadName, err)
 	}
-	var intermediate map[string]interface{}
-	_ = yaml.Unmarshal(raw, &intermediate)
 
-	return intermediate, nil
+	return cloudRunServiceManifest, nil
+}
+
+// convertToCloudRunService converts a Score workload to a Cloud Run Service manifest
+func convertToCloudRunService(spec scoretypes.Workload, workloadName string) (string, error) {
+	fileContent, err := generateCloudRunService(spec, workloadName)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate cloud run service: %w", err)
+	}
+
+	return fileContent, nil
+}
+
+func generateCloudRunService(spec scoretypes.Workload, workloadName string) (string, error) {
+	t, err := template.New("cloudRunServiceTemplate").Parse(cloudRunServiceTemplate)
+	if err != nil {
+		return "", err
+	}
+	// Create a buffer to hold the generated cloud run service
+	var buf bytes.Buffer
+
+	data := struct {
+		WorkloadName string
+		Spec         scoretypes.Workload
+	}{
+		WorkloadName: workloadName,
+		Spec:         spec,
+	}
+
+	if err := t.Execute(&buf, data); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
 func convertContainerVariables(input scoretypes.ContainerVariables, sf func(string) (string, error)) (map[string]string, error) {

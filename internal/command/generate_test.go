@@ -89,24 +89,26 @@ func TestInitAndGenerate_with_sample(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "", stdout)
 	stdout, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
-		"generate", "-o", "manifests.yaml", "--", "score.yaml",
+		"generate", "-o", "manifests.tf", "--", "score.yaml",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "", stdout)
-	raw, err := os.ReadFile(filepath.Join(td, "manifests.yaml"))
+	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
 	assert.NoError(t, err)
-	assert.Equal(t, `---
-apiVersion: score.dev/v1b1
-containers:
-    main:
-        image: stefanprodan/podinfo
-metadata:
-    name: example
-service:
-    ports:
-        web:
-            port: 8080
-`, string(raw))
+	assert.Equal(t, `
+resource "google_cloud_run_v2_service" "example" {
+  name     = "example"
+  location = "us-central1"
+  deletion_protection = false
+  ingress = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    containers {
+      name  = "main"
+      image = "stefanprodan/podinfo"
+    }
+  }
+}`, string(raw))
 
 	// check that state was persisted
 	sd, ok, err := state.LoadStateDirectory(td)
@@ -146,30 +148,31 @@ resources:
 `), 0755))
 
 	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
-		"generate", "-o", "manifests.yaml", "--", "score.yaml",
+		"generate", "-o", "manifests.tf", "--", "score.yaml",
 	})
 	require.NoError(t, err)
-	raw, err := os.ReadFile(filepath.Join(td, "manifests.yaml"))
+	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
 	assert.NoError(t, err)
-	assert.Equal(t, `---
-apiVersion: score.dev/v1b1
-containers:
-    main:
-        files:
-            /somefile:
-                content: |
-                    example
-                noExpand: true
-        image: stefanprodan/podinfo
-        variables:
-            dynamic: example
-            key: value
-metadata:
-    name: example
-resources:
-    thing:
-        params:
-            x: example
-        type: something
-`, string(raw))
+	assert.Equal(t, `
+resource "google_cloud_run_v2_service" "example" {
+  name     = "example"
+  location = "us-central1"
+  deletion_protection = false
+  ingress = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    containers {
+      name  = "main"
+      image = "stefanprodan/podinfo"
+      env {
+        name: "dynamic"
+        value: "example"
+      }
+      env {
+        name: "key"
+        value: "value"
+      }
+    }
+  }
+}`, string(raw))
 }

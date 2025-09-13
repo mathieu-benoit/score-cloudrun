@@ -1,5 +1,5 @@
 .score-cloudrun/
 score.yaml
 .idea/
-manifests.yaml
+manifests.tf
 /score-cloudrun
