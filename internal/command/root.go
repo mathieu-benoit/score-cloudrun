@@ -17,11 +17,11 @@ package command
 import (
 	"log/slog"
 	"github.com/spf13/cobra"
-	"github.com/score-spec/score-implementation-sample/internal/version"
+	"github.com/score-spec/score-cloudrun/internal/version"
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "score-implementation-sample",
+	Use:           "score-cloudrun",
 	SilenceErrors: true,
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
