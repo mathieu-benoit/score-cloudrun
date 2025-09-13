@@ -1,5 +1,5 @@
-.score-implementation-sample/
+.score-cloudrun/
 score.yaml
 .idea/
 manifests.yaml
-/score-implementation-sample
+/score-cloudrun
