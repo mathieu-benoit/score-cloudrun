@@ -16,14 +16,14 @@ build:
 
 test:
 	go vet ./...
-	go test ./... -cover -race
+	go test -v ./...
 
 test-app: build
 	./score-cloudrun --version
 	./score-cloudrun init
 	cat score.yaml
 	./score-cloudrun generate score.yaml
-	cat manifests.yaml
+	cat manifests.tf
 
 build-container:
 	docker build -t score-cloudrun:local .
@@ -33,4 +33,4 @@ test-container: build-container
 	docker run --rm -v .:/score-cloudrun score-cloudrun:local init
 	cat score.yaml
 	docker run --rm -v .:/score-cloudrun score-cloudrun:local generate score.yaml
-	cat manifests.yaml
+	cat manifests.tf
