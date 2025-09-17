@@ -49,6 +49,19 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
         '{{ $arg }}'{{ if (gt (len $container.Args) $i) }},{{ end }}
         {{- end }}
       ]{{- end }}
+
+      {{- if and (ne $container.LivenessProbe nil)  (ne $container.LivenessProbe.HttpGet nil) }}
+      liveness_probe {
+        http_get {
+          {{- if (ne $container.LivenessProbe.HttpGet.Path "") }}
+          path: '{{ $container.LivenessProbe.HttpGet.Path }}'
+          {{- end }}
+          {{- if (ne $container.LivenessProbe.HttpGet.Port 0) }}
+          port: {{ $container.LivenessProbe.HttpGet.Port }}
+          {{- end}}
+        }
+      }
+      {{- end }}
     }
     {{- end }}
   }

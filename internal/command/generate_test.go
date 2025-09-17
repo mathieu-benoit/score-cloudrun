@@ -149,6 +149,16 @@ containers:
       requests:
         memory: "64Mi"
         cpu: "250m"
+    livenessProbe:
+      httpGet:
+        scheme: HTTP
+        path: /alive
+        port: 8080
+    readinessProbe:
+      httpGet:
+        scheme: HTTP
+        path: /ready
+        port: 8080
     files:
       /somefile:
         content: |
@@ -198,6 +208,12 @@ resource "google_cloud_run_v2_service" "example" {
         '--config',
         'app-config.yaml',
       ]
+      liveness_probe {
+        http_get {
+          path: '/alive'
+          port: 8080
+        }
+      }
     }
   }
 }`, string(raw))
