@@ -200,10 +200,10 @@ resource "google_cloud_run_v2_service" "example" {
         name: "key"
         value: "value"
       }
-      command: [
+      command = [
         'node',
       ]
-      args: [
+      args = [
         'packages/backend',
         '--config',
         'app-config.yaml',

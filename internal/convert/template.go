@@ -36,7 +36,7 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       }{{- end }}
 
       {{- if (gt (len $container.Command) 0) }}
-      command: [
+      command = [
         {{- range $i, $cmd := $container.Command }}
         '{{ $cmd }}'{{ if (gt (len $container.Command) $i) }},{{ end }}
         {{- end }}
@@ -44,7 +44,7 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       {{- end }}
 
       {{- if (gt (len $container.Args) 0) }}
-      args: [
+      args = [
         {{- range $i, $arg := $container.Args }}
         '{{ $arg }}'{{ if (gt (len $container.Args) $i) }},{{ end }}
         {{- end }}
