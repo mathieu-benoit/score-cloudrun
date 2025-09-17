@@ -31,9 +31,37 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       
       {{- range $variableName, $variableValue := $container.Variables }}
       env {
-        name: "{{ $variableName }}"
-        value: "{{ $variableValue }}"
+        name = "{{ $variableName }}"
+        value = "{{ $variableValue }}"
       }{{- end }}
+
+      {{- if (gt (len $container.Command) 0) }}
+      command = [
+        {{- range $i, $cmd := $container.Command }}
+        '{{ $cmd }}'{{ if (gt (len $container.Command) $i) }},{{ end }}
+        {{- end }}
+      ]
+      {{- end }}
+
+      {{- if (gt (len $container.Args) 0) }}
+      args = [
+        {{- range $i, $arg := $container.Args }}
+        '{{ $arg }}'{{ if (gt (len $container.Args) $i) }},{{ end }}
+        {{- end }}
+      ]{{- end }}
+
+      {{- if and (ne $container.LivenessProbe nil)  (ne $container.LivenessProbe.HttpGet nil) }}
+      liveness_probe {
+        http_get {
+          {{- if (ne $container.LivenessProbe.HttpGet.Path "") }}
+          path = '{{ $container.LivenessProbe.HttpGet.Path }}'
+          {{- end }}
+          {{- if (ne $container.LivenessProbe.HttpGet.Port 0) }}
+          port = {{ $container.LivenessProbe.HttpGet.Port }}
+          {{- end}}
+        }
+      }
+      {{- end }}
     }
     {{- end }}
   }

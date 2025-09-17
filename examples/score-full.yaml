@@ -13,6 +13,23 @@ containers:
     variables:
       key: value
       dynamic: ${metadata.name}
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+    livenessProbe:
+      httpGet:
+        scheme: HTTP
+        path: /alive
+        port: 8080
+    readinessProbe:
+      httpGet:
+        scheme: HTTP
+        path: /ready
+        port: 8080
     files:
       /somefile:
         content: |

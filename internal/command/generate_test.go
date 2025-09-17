@@ -129,22 +129,50 @@ func TestInitAndGenerate_with_full_example(t *testing.T) {
 	assert.NoError(t, os.WriteFile(filepath.Join(td, "score.yaml"), []byte(`
 apiVersion: score.dev/v1b1
 metadata:
-    name: example
+  name: example
 containers:
-    main:
-        image: stefanprodan/podinfo
-        variables:
-            key: value
-            dynamic: ${metadata.name}
-        files:
-        - target: /somefile
-          content: |
-            ${metadata.name}
+  main:
+    image: stefanprodan/podinfo
+    command:
+      - "node"
+    args:
+      - packages/backend
+      - "--config"
+      - app-config.yaml
+    variables:
+      key: value
+      dynamic: ${metadata.name}
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+    livenessProbe:
+      httpGet:
+        scheme: HTTP
+        path: /alive
+        port: 8080
+    readinessProbe:
+      httpGet:
+        scheme: HTTP
+        path: /ready
+        port: 8080
+    files:
+      /somefile:
+        content: |
+          ${metadata.name}
+service:
+  ports:
+    tcp:
+      port: 8080
+      targetPort: 8080
 resources:
-    thing:
-        type: something
-        params:
-          x: ${metadata.name}
+  thing:
+    type: something
+    params:
+      x: ${metadata.name}
 `), 0755))
 
 	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
@@ -165,12 +193,26 @@ resource "google_cloud_run_v2_service" "example" {
       name  = "main"
       image = "stefanprodan/podinfo"
       env {
-        name: "dynamic"
-        value: "example"
+        name = "dynamic"
+        value = "example"
       }
       env {
-        name: "key"
-        value: "value"
+        name = "key"
+        value = "value"
+      }
+      command = [
+        'node',
+      ]
+      args = [
+        'packages/backend',
+        '--config',
+        'app-config.yaml',
+      ]
+      liveness_probe {
+        http_get {
+          path = '/alive'
+          port = 8080
+        }
       }
     }
   }
