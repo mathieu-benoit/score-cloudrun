@@ -3,3 +3,5 @@ score.yaml
 .idea/
 manifests.tf
 /score-cloudrun
+.terraform/
+.terraform.lock.hcl
