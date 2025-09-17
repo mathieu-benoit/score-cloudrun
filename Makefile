@@ -24,6 +24,8 @@ test-app: build
 	cat score.yaml
 	./score-cloudrun generate score.yaml
 	cat manifests.tf
+	terraform init
+	terraform validate
 
 build-container:
 	docker build -t score-cloudrun:local .
@@ -34,3 +36,5 @@ test-container: build-container
 	cat score.yaml
 	docker run --rm -v .:/score-cloudrun score-cloudrun:local generate score.yaml
 	cat manifests.tf
+	terraform init
+	terraform validate

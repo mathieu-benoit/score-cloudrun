@@ -201,16 +201,16 @@ resource "google_cloud_run_v2_service" "example" {
         value = "value"
       }
       command = [
-        'node',
+        "node",
       ]
       args = [
-        'packages/backend',
-        '--config',
-        'app-config.yaml',
+        "packages/backend",
+        "--config",
+        "app-config.yaml",
       ]
       liveness_probe {
         http_get {
-          path = '/alive'
+          path = "/alive"
           port = 8080
         }
       }

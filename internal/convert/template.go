@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package convert
-
 
 const cloudRunServiceTemplate = `{{ define "cloudRunServiceTemplate" }}{{ $workloadName := .WorkloadName }}
 resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
@@ -38,7 +36,7 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       {{- if (gt (len $container.Command) 0) }}
       command = [
         {{- range $i, $cmd := $container.Command }}
-        '{{ $cmd }}'{{ if (gt (len $container.Command) $i) }},{{ end }}
+        "{{ $cmd }}"{{ if (gt (len $container.Command) $i) }},{{ end }}
         {{- end }}
       ]
       {{- end }}
@@ -46,7 +44,7 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       {{- if (gt (len $container.Args) 0) }}
       args = [
         {{- range $i, $arg := $container.Args }}
-        '{{ $arg }}'{{ if (gt (len $container.Args) $i) }},{{ end }}
+        "{{ $arg }}"{{ if (gt (len $container.Args) $i) }},{{ end }}
         {{- end }}
       ]{{- end }}
 
@@ -54,7 +52,7 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       liveness_probe {
         http_get {
           {{- if (ne $container.LivenessProbe.HttpGet.Path "") }}
-          path = '{{ $container.LivenessProbe.HttpGet.Path }}'
+          path = "{{ $container.LivenessProbe.HttpGet.Path }}"
           {{- end }}
           {{- if (ne $container.LivenessProbe.HttpGet.Port 0) }}
           port = {{ $container.LivenessProbe.HttpGet.Port }}
