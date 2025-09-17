@@ -34,6 +34,21 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
         name: "{{ $variableName }}"
         value: "{{ $variableValue }}"
       }{{- end }}
+
+      {{- if (gt (len $container.Command) 0) }}
+      command: [
+        {{- range $i, $cmd := $container.Command }}
+        '{{ $cmd }}'{{ if (gt (len $container.Command) $i) }},{{ end }}
+        {{- end }}
+      ]
+      {{- end }}
+
+      {{- if (gt (len $container.Args) 0) }}
+      args: [
+        {{- range $i, $arg := $container.Args }}
+        '{{ $arg }}'{{ if (gt (len $container.Args) $i) }},{{ end }}
+        {{- end }}
+      ]{{- end }}
     }
     {{- end }}
   }
