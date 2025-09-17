@@ -193,12 +193,12 @@ resource "google_cloud_run_v2_service" "example" {
       name  = "main"
       image = "stefanprodan/podinfo"
       env {
-        name: "dynamic"
-        value: "example"
+        name = "dynamic"
+        value = "example"
       }
       env {
-        name: "key"
-        value: "value"
+        name = "key"
+        value = "value"
       }
       command = [
         'node',
@@ -210,8 +210,8 @@ resource "google_cloud_run_v2_service" "example" {
       ]
       liveness_probe {
         http_get {
-          path: '/alive'
-          port: 8080
+          path = '/alive'
+          port = 8080
         }
       }
     }

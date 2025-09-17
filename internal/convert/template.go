@@ -31,8 +31,8 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       
       {{- range $variableName, $variableValue := $container.Variables }}
       env {
-        name: "{{ $variableName }}"
-        value: "{{ $variableValue }}"
+        name = "{{ $variableName }}"
+        value = "{{ $variableValue }}"
       }{{- end }}
 
       {{- if (gt (len $container.Command) 0) }}
@@ -54,10 +54,10 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       liveness_probe {
         http_get {
           {{- if (ne $container.LivenessProbe.HttpGet.Path "") }}
-          path: '{{ $container.LivenessProbe.HttpGet.Path }}'
+          path = '{{ $container.LivenessProbe.HttpGet.Path }}'
           {{- end }}
           {{- if (ne $container.LivenessProbe.HttpGet.Port 0) }}
-          port: {{ $container.LivenessProbe.HttpGet.Port }}
+          port = {{ $container.LivenessProbe.HttpGet.Port }}
           {{- end}}
         }
       }
