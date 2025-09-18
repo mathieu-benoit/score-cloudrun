@@ -150,11 +150,11 @@ var generateCmd = &cobra.Command{
 
 		location, _ := cmd.Flags().GetString(generateCmdLocationFlag)
 		if location == "" {
-			return fmt.Errorf("no Google Cloud location specified")
+			return fmt.Errorf("no Google Cloud location specified, please use --%s", generateCmdLocationFlag)
 		}
 		projectId, _ := cmd.Flags().GetString(generateCmdProjectIdFlag)
 		if projectId == "" {
-			return fmt.Errorf("no Google Cloud Project ID specified")
+			return fmt.Errorf("no Google Cloud Project ID specified, please use --%s", generateCmdProjectIdFlag)
 		}
 
 		out := new(bytes.Buffer)

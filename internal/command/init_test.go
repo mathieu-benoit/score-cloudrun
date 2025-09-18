@@ -41,7 +41,9 @@ func TestInitNominal(t *testing.T) {
 	assert.Equal(t, "", stdout)
 	assert.NotEqual(t, "", strings.TrimSpace(stderr))
 
-	stdout, stderr, err = executeAndResetCommand(context.Background(), rootCmd, []string{"generate", "score.yaml"})
+	stdout, stderr, err = executeAndResetCommand(context.Background(), rootCmd, []string{
+		"generate", "score.yaml", "-p", "project-test", "-l", "location-test",
+	})
 	assert.NoError(t, err)
 	assert.Equal(t, ``, stdout)
 	assert.NotEqual(t, "", strings.TrimSpace(stderr))
