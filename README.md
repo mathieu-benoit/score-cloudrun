@@ -17,7 +17,7 @@ On the other hand, Cloud Run is a very [appealing managed Platform to run contai
 Here are some key features of `score-cloudrun`, bringing the advantages of both, Score and Cloud Run:
 1. Simple interface and contract as declarative YAML file that the Devs author;
 2. Implementation details made by the PEs, abstracting from the Devs, allowing more standardization too;
-3. Comination with `score-compose` to boost the Dev inner-loop productivity and save costs.
+3. Seamless combination with `score-compose` to boost the Devs's inner-loop productivity and save costs.
 
 ## Demo
 
