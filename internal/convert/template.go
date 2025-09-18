@@ -15,9 +15,13 @@
 package convert
 
 const cloudRunServiceTemplate = `{{ define "cloudRunServiceTemplate" }}{{ $workloadName := .WorkloadName }}
+provider "google" {
+  project = "{{ .ProjectId }}"
+}
+
 resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
   name     = "{{ $workloadName }}"
-  location = "us-central1"
+  location = "{{ .Location }}"
   deletion_protection = false
   ingress = "INGRESS_TRAFFIC_ALL"
 

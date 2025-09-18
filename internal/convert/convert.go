@@ -28,7 +28,7 @@ import (
 	"github.com/score-spec/score-cloudrun/internal/state"
 )
 
-func Workload(currentState *state.State, workloadName string) (string, error) {
+func Workload(currentState *state.State, workloadName string, location string, projectId string) (string, error) {
 	resOutputs, err := currentState.GetResourceOutputForWorkload(workloadName)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate outputs: %w", err)
@@ -61,7 +61,7 @@ func Workload(currentState *state.State, workloadName string) (string, error) {
 	spec.Resources = resources
 
 	// Convert the Score workload to a Cloud Run Service manifest
-	cloudRunServiceManifest, err := convertToCloudRunService(spec, workloadName)
+	cloudRunServiceManifest, err := convertToCloudRunService(spec, workloadName, location, projectId)
 	if err != nil {
 		return "", fmt.Errorf("workload: %s: failed to convert to Terraform: %w", workloadName, err)
 	}
@@ -70,8 +70,8 @@ func Workload(currentState *state.State, workloadName string) (string, error) {
 }
 
 // convertToCloudRunService converts a Score workload to a Cloud Run Service manifest
-func convertToCloudRunService(spec scoretypes.Workload, workloadName string) (string, error) {
-	fileContent, err := generateCloudRunService(spec, workloadName)
+func convertToCloudRunService(spec scoretypes.Workload, workloadName string, location string, projectId string) (string, error) {
+	fileContent, err := generateCloudRunService(spec, workloadName, location, projectId)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate cloud run service: %w", err)
 	}
@@ -79,7 +79,7 @@ func convertToCloudRunService(spec scoretypes.Workload, workloadName string) (st
 	return fileContent, nil
 }
 
-func generateCloudRunService(spec scoretypes.Workload, workloadName string) (string, error) {
+func generateCloudRunService(spec scoretypes.Workload, workloadName string, location string, projectId string) (string, error) {
 	t, err := template.New("cloudRunServiceTemplate").Parse(cloudRunServiceTemplate)
 	if err != nil {
 		return "", err
@@ -90,9 +90,13 @@ func generateCloudRunService(spec scoretypes.Workload, workloadName string) (str
 	data := struct {
 		WorkloadName string
 		Spec         scoretypes.Workload
+		Location     string
+		ProjectId    string
 	}{
 		WorkloadName: workloadName,
 		Spec:         spec,
+		Location:     location,
+		ProjectId:    projectId,
 	}
 
 	if err := t.Execute(&buf, data); err != nil {
