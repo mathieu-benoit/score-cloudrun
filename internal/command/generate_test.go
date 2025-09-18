@@ -103,11 +103,16 @@ resource "google_cloud_run_v2_service" "example" {
   ingress = "INGRESS_TRAFFIC_ALL"
 
   template {
+    service_account = google_service_account.example.email
     containers {
       name  = "main"
       image = "stefanprodan/podinfo"
     }
   }
+}
+
+resource "google_service_account" "example" {
+  account_id = "example"
 }`, string(raw))
 
 	// check that state was persisted
@@ -189,6 +194,7 @@ resource "google_cloud_run_v2_service" "example" {
   ingress = "INGRESS_TRAFFIC_ALL"
 
   template {
+    service_account = google_service_account.example.email
     containers {
       name  = "main"
       image = "stefanprodan/podinfo"
@@ -216,5 +222,9 @@ resource "google_cloud_run_v2_service" "example" {
       }
     }
   }
+}
+
+resource "google_service_account" "example" {
+  account_id = "example"
 }`, string(raw))
 }

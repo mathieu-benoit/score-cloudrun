@@ -66,12 +66,8 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
     {{- end }}
   }
 }
- 
-resource "google_service_account" "{{ $workloadName }}" {
-  account_id = local.google_service_account_id
-}
 
-locals {
-  google_service_account_id = "{{ $workloadName }}"
+resource "google_service_account" "{{ $workloadName }}" {
+  account_id = "{{ $workloadName }}"
 }{{- end }}
 `
