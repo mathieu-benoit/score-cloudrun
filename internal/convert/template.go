@@ -22,6 +22,8 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
   ingress = "INGRESS_TRAFFIC_ALL"
 
   template {
+    service_account = google_service_account.{{ $workloadName }}.email
+
     {{- range $containerName, $container := .Spec.Containers }}
     containers {
       name  = "{{ $containerName }}"
@@ -63,5 +65,9 @@ resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
     }
     {{- end }}
   }
+}
+
+resource "google_service_account" "{{ $workloadName }}" {
+  account_id = "{{ $workloadName }}"
 }{{- end }}
 `
