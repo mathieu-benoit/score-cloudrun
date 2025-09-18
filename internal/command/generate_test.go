@@ -57,6 +57,30 @@ func TestGenerateWithoutScoreFiles(t *testing.T) {
 	assert.Equal(t, "", stdout)
 }
 
+func TestGenerateWithoutLocation(t *testing.T) {
+	_ = changeToTempDir(t)
+	stdout, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
+	assert.NoError(t, err)
+	assert.Equal(t, "", stdout)
+	stdout, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
+		"generate", "score.yaml",
+	})
+	assert.EqualError(t, err, "no Google Cloud location specified, please use --location")
+	assert.Equal(t, "", stdout)
+}
+
+func TestGenerateWithoutProjectId(t *testing.T) {
+	_ = changeToTempDir(t)
+	stdout, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
+	assert.NoError(t, err)
+	assert.Equal(t, "", stdout)
+	stdout, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
+		"generate", "score.yaml", "--location", "location-test",
+	})
+	assert.EqualError(t, err, "no Google Cloud Project ID specified, please use --project-id")
+	assert.Equal(t, "", stdout)
+}
+
 func TestInitAndGenerateWithBadFile(t *testing.T) {
 	td := changeToTempDir(t)
 	stdout, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
@@ -89,16 +113,20 @@ func TestInitAndGenerate_with_sample(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "", stdout)
 	stdout, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
-		"generate", "-o", "manifests.tf", "--", "score.yaml",
+		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "location-test", "--", "score.yaml",
 	})
 	require.NoError(t, err)
 	assert.Equal(t, "", stdout)
 	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
 	assert.NoError(t, err)
 	assert.Equal(t, `
+provider "google" {
+  project = "project-test"
+}
+
 resource "google_cloud_run_v2_service" "example" {
   name     = "example"
-  location = "us-central1"
+  location = "location-test"
   deletion_protection = false
   ingress = "INGRESS_TRAFFIC_ALL"
 
@@ -181,15 +209,19 @@ resources:
 `), 0755))
 
 	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
-		"generate", "-o", "manifests.tf", "--", "score.yaml",
+		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "location-test", "--", "score.yaml",
 	})
 	require.NoError(t, err)
 	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
 	assert.NoError(t, err)
 	assert.Equal(t, `
+provider "google" {
+  project = "project-test"
+}
+
 resource "google_cloud_run_v2_service" "example" {
   name     = "example"
-  location = "us-central1"
+  location = "location-test"
   deletion_protection = false
   ingress = "INGRESS_TRAFFIC_ALL"
 

@@ -21,7 +21,7 @@ Here are some key features of `score-cloudrun`, bringing the advantages of both,
 
 ## Demo
 
-Write the following to `score.yaml`:
+From source code:
 
 ```bash
 make build
@@ -30,15 +30,25 @@ make build
 
 ./score-cloudrun init
 
-./score-cloudrun generate score.yaml
+./score-cloudrun generate score.yaml --location FIXME --project-id FIXME
+
+terraform init
+
+terrraform plan
 ```
+
+From container image:
 
 ```bash
 make build-container
 
 docker run --rm -it -v .:/score-cloudrun score-cloudrun:local init
 
-docker run --rm -it -v .:/score-cloudrun score-cloudrun:local generate score.yaml
+docker run --rm -it -v .:/score-cloudrun score-cloudrun:local generate score.yaml --location FIXME --project-id FIXME
+
+terraform init
+
+terrraform plan
 ```
 
 ## Features not covered

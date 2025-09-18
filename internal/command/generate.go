@@ -40,6 +40,8 @@ const (
 	generateCmdOverridePropertyFlag = "override-property"
 	generateCmdImageFlag            = "image"
 	generateCmdOutputFlag           = "output"
+	generateCmdLocationFlag         = "location"
+	generateCmdProjectIdFlag        = "project-id"
 )
 
 var generateCmd = &cobra.Command{
@@ -146,9 +148,18 @@ var generateCmd = &cobra.Command{
 		}
 		slog.Info("Persisted state file")
 
+		location, _ := cmd.Flags().GetString(generateCmdLocationFlag)
+		if location == "" {
+			return fmt.Errorf("no Google Cloud location specified, please use --%s", generateCmdLocationFlag)
+		}
+		projectId, _ := cmd.Flags().GetString(generateCmdProjectIdFlag)
+		if projectId == "" {
+			return fmt.Errorf("no Google Cloud Project ID specified, please use --%s", generateCmdProjectIdFlag)
+		}
+
 		out := new(bytes.Buffer)
 		for workloadName := range currentState.Workloads {
-			if manifest, err := convert.Workload(currentState, workloadName); err != nil {
+			if manifest, err := convert.Workload(currentState, workloadName, location, projectId); err != nil {
 				return fmt.Errorf("failed to convert workloads: %w", err)
 			} else {
 				out.WriteString(manifest)
@@ -217,6 +228,8 @@ func init() {
 	generateCmd.Flags().StringP(generateCmdOutputFlag, "o", "manifests.tf", "The output manifests file to write the manifests to")
 	generateCmd.Flags().String(generateCmdOverridesFileFlag, "", "An optional file of Score overrides to merge in")
 	generateCmd.Flags().StringArray(generateCmdOverridePropertyFlag, []string{}, "An optional set of path=key overrides to set or remove")
-	generateCmd.Flags().String(generateCmdImageFlag, "", "An optional container image to use for any container with image == '.'")
+	generateCmd.Flags().StringP(generateCmdImageFlag, "i", "", "An optional container image to use for any container with image == '.'")
+	generateCmd.Flags().StringP(generateCmdLocationFlag, "l", "", "The Google Cloud Location to deploy to")
+	generateCmd.Flags().StringP(generateCmdProjectIdFlag, "p", "", "The Google Cloud Project ID to deploy to")
 	rootCmd.AddCommand(generateCmd)
 }
