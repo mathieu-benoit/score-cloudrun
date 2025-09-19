@@ -3,7 +3,12 @@
 ![](score-cloudrun.png)
 
 TOC:
-- 
+- [As Dev, I define a very basic workload](#as-dev-i-define-a-very-basic-workload)
+- [As Dev, I want to know what resource dependencies I can use alongside my workload](#as-dev-i-want-to-know-what-resource-dependencies-i-can-use-alongside-my-workload)
+- [As Dev, I now want to use a Redis database](#as-dev-i-now-want-to-use-a-redis-database)
+- [As Dev, I now want to use a PostgreSQL database](#as-dev-i-now-want-to-use-a-postgresql-database)
+- [As Dev, I now want to expose my workload via a DNS](#as-dev-i-now-want-to-expose-my-workload-via-a-dns)
+- [As Dev, I now want to test my workload and dependencies locally](#as-dev-i-now-want-to-test-my-workload-and-dependencies-locally)
 
 ```bash
 score-cloudrun init
@@ -227,3 +232,4 @@ docker compose up --build -d --remove-orphans
 - `score-cloudrun generate --format terraform|config-connector|knative`
 - Job
 - Volumes
+- Officially releasing this at KubeCon NA 2025 Atlanta
