@@ -136,18 +136,6 @@ var generateCmd = &cobra.Command{
 			return fmt.Errorf("failed to prime resources: %w", err)
 		}
 
-		slog.Info("Primed resources", "#workloads", len(currentState.Workloads), "#resources", len(currentState.Resources))
-
-		if currentState, err = provisioners.ProvisionResources(currentState); err != nil {
-			return fmt.Errorf("failed to provision resources: %w", err)
-		}
-
-		sd.State = *currentState
-		if err := sd.Persist(); err != nil {
-			return fmt.Errorf("failed to persist state file: %w", err)
-		}
-		slog.Info("Persisted state file")
-
 		location, _ := cmd.Flags().GetString(generateCmdLocationFlag)
 		if location == "" {
 			return fmt.Errorf("no Google Cloud location specified, please use --%s", generateCmdLocationFlag)
@@ -157,15 +145,31 @@ var generateCmd = &cobra.Command{
 			return fmt.Errorf("no Google Cloud Project ID specified, please use --%s", generateCmdProjectIdFlag)
 		}
 
+		slog.Info("Primed resources", "#workloads", len(currentState.Workloads), "#resources", len(currentState.Resources))
+
+		var resourcesManifests = ""
+		if resourcesManifests, currentState, err = provisioners.ProvisionResources(currentState, location); err != nil {
+			return fmt.Errorf("failed to provision resources: %w", err)
+		}
+
+		sd.State = *currentState
+		if err := sd.Persist(); err != nil {
+			return fmt.Errorf("failed to persist state file: %w", err)
+		}
+		slog.Info("Persisted state file")
+
 		out := new(bytes.Buffer)
 		for workloadName := range currentState.Workloads {
-			if manifest, err := convert.Workload(currentState, workloadName, location, projectId); err != nil {
+			if workloadManifest, err := convert.Workload(currentState, workloadName, location, projectId); err != nil {
 				return fmt.Errorf("failed to convert workloads: %w", err)
 			} else {
-				out.WriteString(manifest)
+				out.WriteString(workloadManifest)
 			}
-			slog.Info(fmt.Sprintf("Wrote manifest to manifests buffer for workload '%s'", workloadName))
+			slog.Info(fmt.Sprintf("Wrote workload manifest to manifests buffer for workload '%s'", workloadName))
 		}
+
+		out.WriteString(resourcesManifests)
+		slog.Info("Wrote resources manifests to manifests buffer")
 
 		v, _ := cmd.Flags().GetString(generateCmdOutputFlag)
 		if v == "" {
