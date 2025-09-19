@@ -74,10 +74,14 @@ func ProvisionResources(currentState *state.State, location string) (string, *st
 			resState.Outputs["host"] = "${google_sql_database_instance.instance.name}"
 			resState.Outputs["database"] = "${google_sql_database.database.name}"
 			resState.Outputs["port"] = 5432
-			resState.Outputs["username"] = ""
-			resState.Outputs["password"] = "${google_redis_instance.memorystore.auth_string}"
+			resState.Outputs["username"] = "${google_sql_user.user.name}"
+			resState.Outputs["password"] = "${google_sql_user.user.password}"
 			resourceTemplateName = "postgresTemplate"
 			resourceTemplate = postgresTemplate
+		} else if resUid.Type() == "dns" {
+			resState.Outputs["host"] = "${google_cloud_run_v2_service.example.uri}"
+			resourceTemplateName = "dnsTemplate"
+			resourceTemplate = dnsTemplate
 		}
 
 		var resourceManifest = ""

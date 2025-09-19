@@ -51,7 +51,7 @@ resource "random_password" "password" {
   special = false
 }
 
-resource "google_sql_user" "main" {
+resource "google_sql_user" "user" {
   instance = google_sql_database_instance.instance.name
   name     = "user-${random_string.postgres_database_name.result}"
   password = random_password.password.result
