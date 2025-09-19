@@ -6,3 +6,5 @@ main.tf
 /score-cloudrun
 .terraform/
 .terraform.lock.hcl
+.score-compose/
+compose.yaml

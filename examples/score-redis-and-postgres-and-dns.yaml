@@ -26,9 +26,11 @@ resources:
     type: redis
   my-postgres:
     type: postgres
+  my-dns:
+    type: dns
   my-route:
     type: route
     params:
-      host: ${resources.dns.host}
+      host: ${resources.my-dns.host}
       path: /
       port: 8080

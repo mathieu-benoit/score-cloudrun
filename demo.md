@@ -177,17 +177,19 @@ resources:
     type: redis
   my-postgres:
     type: postgres
+  my-dns:
+    type: dns
   my-route:
     type: route
     params:
-      host: ${resources.dns.host}
+      host: ${resources.my-dns.host}
       path: /
       port: 8080
 ```
 
 The associated Cloud Run and dependencies resources in Terraform can be generated:
 ```bash
-score-cloudrun generate examples/score-redis-and-postgres.yaml \
+score-cloudrun generate examples/score-redis-and-postgres-and-dns.yaml \
     --location FIXME \
     --project-id FIXME \
     --image ghcr.io/stefanprodan/podinfo:latest \
@@ -203,7 +205,21 @@ terrraform plan -out out.tfplan
 terrraform apply out.tfplan
 ```
 
-## As Dev, I now want to expose my workload via a DNS
+## As Dev, I now want to test my workload and dependencies locally
+
+Same Score file, but now we use `score-compose` to generate the Docker Compose file:
+```bash
+score-compose init
+
+score-compose generate examples/score-redis-and-postgres-and-dns.yaml \
+    --image ghcr.io/stefanprodan/podinfo:latest \
+    -o compose.yaml
+```
+
+And deploy them:
+```bash
+docker compose up --build -d --remove-orphans
+```
 
 ## What's coming next
 
