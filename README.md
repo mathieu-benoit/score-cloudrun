@@ -21,7 +21,7 @@ Here are some key features of `score-cloudrun`, bringing the advantages of both,
 
 ![](score-cloudrun.png)
 
-## Demo
+## Use 
 
 From source code:
 
@@ -52,6 +52,10 @@ terraform init
 
 terrraform plan
 ```
+
+## Demos!
+
+[Demos!](demo.md)
 
 ## Features not covered
 
