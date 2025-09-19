@@ -2,6 +2,10 @@
 
 ![](score-cloudrun.png)
 
+Objectives:
+- As Developer, I use the Score specification as a contract in order to describe what I need to deploy my workloads.
+- As Platform Engineer, I author the Terraform manifests that will be used by `score-cloudrun` to centralize and standardize how the workloads and their infrastructure dependencies will actually be deployed in Cloud Run and associated Google Cloud services.
+
 TOC:
 - [As Dev, I define a very basic workload](#as-dev-i-define-a-very-basic-workload)
 - [As Dev, I want to know what resource dependencies I can use alongside my workload](#as-dev-i-want-to-know-what-resource-dependencies-i-can-use-alongside-my-workload)
@@ -9,6 +13,7 @@ TOC:
 - [As Dev, I now want to use a PostgreSQL database](#as-dev-i-now-want-to-use-a-postgresql-database)
 - [As Dev, I now want to expose my workload via a DNS](#as-dev-i-now-want-to-expose-my-workload-via-a-dns)
 - [As Dev, I now want to test my workload and dependencies locally](#as-dev-i-now-want-to-test-my-workload-and-dependencies-locally)
+- [What's coming next](#whats-coming-next)
 
 ```bash
 score-cloudrun init
@@ -44,6 +49,11 @@ terraform init
 terrraform plan -out out.tfplan
 
 terrraform apply out.tfplan
+```
+
+```none
+google_cloud_run_v2_service
+google_service_account
 ```
 
 ## As Dev, I want to know what resource dependencies I can use alongside my workload
@@ -105,6 +115,12 @@ terrraform plan -out out.tfplan
 terrraform apply out.tfplan
 ```
 
+```none
+google_cloud_run_v2_service
+google_service_account
+google_redis_instance
+```
+
 ## As Dev, I now want to use a PostgreSQL database
 
 ```yaml
@@ -149,6 +165,15 @@ terraform init
 terrraform plan -out out.tfplan
 
 terrraform apply out.tfplan
+```
+
+```none
+google_cloud_run_v2_service
+google_service_account
+google_sql_database_instance
+google_sql_database
+google_sql_user
+google_redis_instance
 ```
 
 ## As Dev, I now want to expose my workload via a DNS
@@ -210,6 +235,16 @@ terrraform plan -out out.tfplan
 terrraform apply out.tfplan
 ```
 
+```none
+google_cloud_run_v2_service
+google_service_account
+google_cloud_run_service_iam_policy
+google_sql_database_instance
+google_sql_database
+google_sql_user
+google_redis_instance
+```
+
 ## As Dev, I now want to test my workload and dependencies locally
 
 Same Score file, but now we use `score-compose` to generate the Docker Compose file:
@@ -226,10 +261,20 @@ And deploy them:
 docker compose up --build -d --remove-orphans
 ```
 
+```none
+CONTAINER ID   IMAGE                                 COMMAND                  CREATED       STATUS                    PORTS                                     NAMES
+72fa0a7182ac   mirror.gcr.io/nginx:1-alpine          "/docker-entrypoint.…"   3 hours ago   Up 12 minutes             0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   score-cloudrun-routing-MflvHg-1
+83cf4335b8cd   ghcr.io/stefanprodan/podinfo:latest   "./podinfo"              3 hours ago   Up 1 second                                                         score-cloudrun-example-main-1
+7e55f78bcf38   mirror.gcr.io/redis:7-alpine          "redis-server /usr/l…"   3 hours ago   Up 12 minutes             6379/tcp                                  score-cloudrun-redis-Li8iSC-1
+ae3c395e038b   mirror.gcr.io/postgres:17-alpine      "docker-entrypoint.s…"   3 hours ago   Up 12 minutes (healthy)   5432/tcp                                  score-cloudrun-pg-hNX58v-1
+```
+
 ## What's coming next
 
+- On purpose, this demo is not illustrated how Platform Engineers can bring their own Terraform manifests, this will be illustrated soon. The idea was to focus on the Developer Experience.
 - `score-cloudrun generate --source`
-- `score-cloudrun generate --format terraform|config-connector|knative`
-- Job
-- Volumes
+- `score-cloudrun generate --workload-profile terraform|config-connector|knative`
+- `score-cloudrun init --workload-profiles`
+- More features like Job, Volumes, Traffic, etc.
 - Officially releasing this at KubeCon NA 2025 Atlanta
+- We need your feedback!
