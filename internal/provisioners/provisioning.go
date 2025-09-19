@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"log/slog"
 	"maps"
 
 	"github.com/score-spec/score-go/framework"
@@ -69,14 +70,25 @@ func ProvisionResources(currentState *state.State, location string) (string, *st
 			resState.Outputs["password"] = "${google_redis_instance.memorystore.auth_string}"
 			resourceTemplateName = "redisTemplate"
 			resourceTemplate = redisTemplate
+		} else if resUid.Type() == "postgres" {
+			resState.Outputs["host"] = "${google_sql_database_instance.instance.name}"
+			resState.Outputs["database"] = "${google_sql_database.database.name}"
+			resState.Outputs["port"] = 5432
+			resState.Outputs["username"] = ""
+			resState.Outputs["password"] = "${google_redis_instance.memorystore.auth_string}"
+			resourceTemplateName = "postgresTemplate"
+			resourceTemplate = postgresTemplate
 		}
 
-		manifests, err = generateResource(resourceTemplateName, resourceTemplate, location)
+		var resourceManifest = ""
+		resourceManifest, err = generateResource(resourceTemplateName, resourceTemplate, location)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to generate resource %s: %w", resUid.Type(), err)
 		}
+		slog.Info(fmt.Sprintf("Resource %s's manifests generated", resUid.Type()))
 
 		out.Resources[resUid] = resState
+		manifests = manifests + resourceManifest
 	}
 
 	return manifests, out, nil

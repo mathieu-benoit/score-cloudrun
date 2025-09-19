@@ -2,6 +2,7 @@
 score.yaml
 .idea/
 manifests.tf
+main.tf
 /score-cloudrun
 .terraform/
 .terraform.lock.hcl
