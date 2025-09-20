@@ -1,0 +1,9 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: example
+containers:
+  main:
+    image: .
+    variables:
+      PODINFO_UI_COLOR: "#34577c"
+      PODINFO_UI_MESSAGE: ""

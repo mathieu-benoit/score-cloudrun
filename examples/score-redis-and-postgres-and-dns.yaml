@@ -1,0 +1,36 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: example
+containers:
+  main:
+    image: .
+    variables:
+      PODINFO_UI_COLOR: "#34577c"
+      PODINFO_UI_MESSAGE: ""
+      REDIS_HOST: ${resources.my-redis.host}
+      REDIS_PORT: ${resources.my-redis.port}
+      REDIS_USERNAME: ${resources.my-redis.username}
+      REDIS_PASSWORD: ${resources.my-redis.password}
+      POSTGRES_HOST: ${resources.my-postgres.host}
+      POSTGRES_DATABASE: ${resources.my-postgres.database}
+      POSTGRES_PORT: ${resources.my-postgres.port}
+      POSTGRES_USERNAME: ${resources.my-postgres.username}
+      POSTGRES_PASSWORD: ${resources.my-postgres.password}
+service:
+  ports:
+    web:
+      port: 8080
+      targetPort: 9898
+resources:
+  my-redis:
+    type: redis
+  my-postgres:
+    type: postgres
+  my-dns:
+    type: dns
+  my-route:
+    type: route
+    params:
+      host: ${resources.my-dns.host}
+      path: /
+      port: 8080
