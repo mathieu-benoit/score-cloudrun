@@ -84,7 +84,7 @@ func ProvisionResources(currentState *state.State, location string) (string, *st
 			resourceTemplate = dnsTemplate
 		}
 
-		var resourceManifest = ""
+		var resourceManifest string
 		resourceManifest, err = generateResource(resourceTemplateName, resourceTemplate, location)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to generate resource %s: %w", resUid.Type(), err)

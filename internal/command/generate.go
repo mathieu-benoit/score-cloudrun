@@ -147,7 +147,7 @@ var generateCmd = &cobra.Command{
 
 		slog.Info("Primed resources", "#workloads", len(currentState.Workloads), "#resources", len(currentState.Resources))
 
-		var resourcesManifests = ""
+		var resourcesManifests string
 		if resourcesManifests, currentState, err = provisioners.ProvisionResources(currentState, location); err != nil {
 			return fmt.Errorf("failed to provision resources: %w", err)
 		}
