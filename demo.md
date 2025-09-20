@@ -1,4 +1,4 @@
-# Demo!
+# `score-cloudrun` Demo!
 
 ![](score-cloudrun.png)
 
