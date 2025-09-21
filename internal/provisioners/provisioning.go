@@ -58,8 +58,7 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, l
 			//return provisioner.Id == resUid
 		})
 		if provisionerIndex < 0 {
-			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. "+
-				"Please implement a custom resource provisioner to support this resource type.", resUid)
+			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. Please implement a custom resource provisioner to support this resource type", resUid)
 		}
 
 		var params map[string]interface{}
