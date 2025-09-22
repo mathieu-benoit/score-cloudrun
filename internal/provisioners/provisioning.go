@@ -54,8 +54,7 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, l
 		resState := out.Resources[resUid]
 
 		provisionerIndex := slices.IndexFunc(provisioners, func(provisioner Provisioner) bool {
-			return true
-			//return provisioner.Id == resUid
+			return provisioner.ResType == resUid.Type()
 		})
 		if provisionerIndex < 0 {
 			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. Please implement a custom resource provisioner to support this resource type", resUid)
