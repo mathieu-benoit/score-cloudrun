@@ -1,0 +1,3 @@
+- uri: default-terraform://default-provisioners/route
+  type: route
+  description: Define an empty route.
