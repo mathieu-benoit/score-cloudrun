@@ -31,6 +31,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/score-spec/score-cloudrun/internal/convert"
+	"github.com/score-spec/score-cloudrun/internal/profiles"
 	"github.com/score-spec/score-cloudrun/internal/provisioners"
 	"github.com/score-spec/score-cloudrun/internal/provisioners/loader"
 	"github.com/score-spec/score-cloudrun/internal/state"
@@ -147,7 +148,7 @@ var generateCmd = &cobra.Command{
 
 		slog.Info("Primed resources", "#workloads", len(currentState.Workloads), "#resources", len(currentState.Resources))
 
-		localProvisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.DefaultSuffix)
+		localProvisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.ProvisionersFileSuffix)
 		if err != nil {
 			return fmt.Errorf("failed to load provisioners")
 		}
@@ -164,9 +165,23 @@ var generateCmd = &cobra.Command{
 		}
 		slog.Info("Persisted state file")
 
+		localProfiles, err := profiles.LoadProfilesFromDirectory(sd.Path)
+		if err != nil {
+			return fmt.Errorf("failed to load profiles")
+		}
+		slog.Info("Loaded profiles", "#profiles", len(localProfiles))
+
 		out := new(bytes.Buffer)
 		for workloadName := range currentState.Workloads {
-			if workloadManifest, err := convert.Workload(currentState, workloadName, location, projectId); err != nil {
+			workloadProfileName := "default"
+			profileIndex := slices.IndexFunc(localProfiles, func(profile profiles.Profile) bool {
+				return profile.Id == workloadProfileName
+			})
+			if profileIndex < 0 {
+				return fmt.Errorf("workload profile '%s' is not supported by any workload profiles templates. Please implement a custom workload profile template to support it", workloadProfileName)
+			}
+
+			if workloadManifest, err := convert.Workload(localProfiles[profileIndex], currentState, workloadName, location, projectId); err != nil {
 				return fmt.Errorf("failed to convert workloads: %w", err)
 			} else {
 				out.WriteString(workloadManifest)

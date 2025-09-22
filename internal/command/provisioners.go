@@ -55,7 +55,7 @@ func listProvisioners(cmd *cobra.Command, args []string) error {
 	}
 	slog.Debug(fmt.Sprintln("Listing provisioners"))
 
-	provisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.DefaultSuffix)
+	provisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.ProvisionersFileSuffix)
 	if err != nil {
 		return fmt.Errorf("failed to load provisioners in %s: %w", sd.Path, err)
 	}
