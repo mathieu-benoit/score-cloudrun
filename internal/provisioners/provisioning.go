@@ -20,13 +20,26 @@ import (
 	"html/template"
 	"log/slog"
 	"maps"
+	"slices"
 
 	"github.com/score-spec/score-go/framework"
 
 	"github.com/score-spec/score-cloudrun/internal/state"
 )
 
-func ProvisionResources(currentState *state.State, location string) (string, *state.State, error) {
+type Provisioner struct {
+	Uri               string  `yaml:"uri"`
+	ResType           string  `yaml:"type"`
+	Class             *string `yaml:"class,omitempty"`
+	Description       string  `yaml:"description,omitempty"`
+	ManifestsTemplate string  `yaml:"manifests,omitempty"`
+	// Inputs is a list of inputs that the provisioner expects to be passed in.
+	Inputs map[string]interface{} `yaml:"inputs,omitempty"`
+	// Outputs is a list of outputs that the provisioner should return.
+	Outputs map[string]interface{} `yaml:"outputs,omitempty"`
+}
+
+func ProvisionResources(currentState *state.State, provisioners []Provisioner, location string) (string, *state.State, error) {
 	out := currentState
 	manifests := ""
 
@@ -39,6 +52,13 @@ func ProvisionResources(currentState *state.State, location string) (string, *st
 	out.Resources = maps.Clone(out.Resources)
 	for _, resUid := range orderedResources {
 		resState := out.Resources[resUid]
+
+		provisionerIndex := slices.IndexFunc(provisioners, func(provisioner Provisioner) bool {
+			return provisioner.ResType == resUid.Type()
+		})
+		if provisionerIndex < 0 {
+			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. Please implement a custom resource provisioner to support this resource type", resUid)
+		}
 
 		var params map[string]interface{}
 		if len(resState.Params) > 0 {
@@ -55,51 +75,31 @@ func ProvisionResources(currentState *state.State, location string) (string, *st
 		}
 		resState.Params = params
 
-		// ==========================================================================================
-		// TODO: HERE IS WHERE YOU WOULD USE THE RESOURCE TYPE, CLASS, ID, AND PARAMS TO PROVISION IT
-		// ==========================================================================================
+		resState.ProvisionerUri = provisioners[provisionerIndex].Uri
 
-		resState.Outputs = map[string]interface{}{}
-		var resourceTemplate = ""
-		var resourceTemplateName = ""
-
-		if resUid.Type() == "redis" {
-			resState.Outputs["host"] = "${google_redis_instance.memorystore.host}"
-			resState.Outputs["port"] = "${google_redis_instance.memorystore.port}"
-			resState.Outputs["username"] = ""
-			resState.Outputs["password"] = "${google_redis_instance.memorystore.auth_string}"
-			resourceTemplateName = "redisTemplate"
-			resourceTemplate = redisTemplate
-		} else if resUid.Type() == "postgres" {
-			resState.Outputs["host"] = "${google_sql_database_instance.instance.name}"
-			resState.Outputs["database"] = "${google_sql_database.database.name}"
-			resState.Outputs["port"] = 5432
-			resState.Outputs["username"] = "${google_sql_user.user.name}"
-			resState.Outputs["password"] = "${google_sql_user.user.password}"
-			resourceTemplateName = "postgresTemplate"
-			resourceTemplate = postgresTemplate
-		} else if resUid.Type() == "dns" {
-			resState.Outputs["host"] = "${google_cloud_run_v2_service.example.uri}"
-			resourceTemplateName = "dnsTemplate"
-			resourceTemplate = dnsTemplate
+		if provisioners[provisionerIndex].Outputs != nil {
+			resState.Outputs = provisioners[provisionerIndex].Outputs
+		} else {
+			resState.Outputs = make(map[string]interface{})
 		}
 
 		var resourceManifest string
-		resourceManifest, err = generateResource(resourceTemplateName, resourceTemplate, location)
+		resourceManifest, err = generateResourceManifest(provisioners[provisionerIndex].ManifestsTemplate, location)
 		if err != nil {
-			return "", nil, fmt.Errorf("failed to generate resource %s: %w", resUid.Type(), err)
+			return "", nil, fmt.Errorf("failed to generate resource manifest %s: %w", resUid.Type(), err)
 		}
 		slog.Info(fmt.Sprintf("Resource %s's manifests generated", resUid.Type()))
 
 		out.Resources[resUid] = resState
+		resourceManifest = "\n" + resourceManifest
 		manifests = manifests + resourceManifest
 	}
 
 	return manifests, out, nil
 }
 
-func generateResource(resourceTypeTemplateName string, resourceTypeTemplate string, location string) (string, error) {
-	t, err := template.New(resourceTypeTemplateName).Parse(resourceTypeTemplate)
+func generateResourceManifest(resourceTypeTemplate string, location string) (string, error) {
+	t, err := template.New("template").Parse(resourceTypeTemplate)
 	if err != nil {
 		return "", err
 	}

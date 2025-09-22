@@ -1,0 +1,51 @@
+- uri: default-terraform://default-provisioners/cloud-sql-postgres
+  type: postgres
+  description: Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource.
+  outputs:
+    host: "${google_sql_database_instance.instance.name}"
+    database: "${google_sql_database.database.name}"
+    port: 5432
+    username: "${google_sql_user.user.name}"
+    password: "${google_sql_user.user.password}"
+  manifests: |
+    resource "random_string" "postgres_instance_name" {
+      length  = 10
+      special = false
+      lower   = true
+      upper   = false
+    }
+
+    resource "google_sql_database_instance" "instance" {
+      name             = "instance-${random_string.memorystore_instance_name.result}"
+      region           = "{{ .Location }}"
+      database_version = "POSTGRES_14"
+      settings {
+        tier = "db-g1-small"
+      }
+
+      deletion_protection  = true
+    }
+
+    resource "random_string" "postgres_database_name" {
+      length  = 10
+      special = false
+      lower   = true
+      upper   = false
+    }
+
+    resource "google_sql_database" "database" {
+      name     = "db-${random_string.postgres_database_name.result}"
+      instance = google_sql_database_instance.instance.name
+      deletion_policy = "ABANDON"
+    }
+
+    resource "random_password" "password" {
+      length  = 16
+      special = false
+    }
+
+    resource "google_sql_user" "user" {
+      instance = google_sql_database_instance.instance.name
+      name     = "user-${random_string.postgres_database_name.result}"
+      password = random_password.password.result
+    }

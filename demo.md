@@ -35,7 +35,7 @@ containers:
 
 The associated Cloud Run resources in Terraform can be generated:
 ```bash
-score-cloudrun generate examples/score-basic.yaml \
+score-cloudrun generate examples/score/score-basic.yaml \
     --location FIXME \
     --project-id FIXME \
     --image ghcr.io/stefanprodan/podinfo:latest \
@@ -99,7 +99,7 @@ resources:
 
 The associated Cloud Run and dependencies resources in Terraform can be generated:
 ```bash
-score-cloudrun generate examples/score-redis.yaml \
+score-cloudrun generate examples/score/score-redis.yaml \
     --location FIXME \
     --project-id FIXME \
     --image ghcr.io/stefanprodan/podinfo:latest \
@@ -151,7 +151,7 @@ resources:
 
 The associated Cloud Run and dependencies resources in Terraform can be generated:
 ```bash
-score-cloudrun generate examples/score-redis-and-postgres.yaml \
+score-cloudrun generate examples/score/score-redis-and-postgres.yaml \
     --location FIXME \
     --project-id FIXME \
     --image ghcr.io/stefanprodan/podinfo:latest \
@@ -219,7 +219,7 @@ resources:
 
 The associated Cloud Run and dependencies resources in Terraform can be generated:
 ```bash
-score-cloudrun generate examples/score-redis-and-postgres-and-dns.yaml \
+score-cloudrun generate examples/score/score-redis-and-postgres-and-dns.yaml \
     --location FIXME \
     --project-id FIXME \
     --image ghcr.io/stefanprodan/podinfo:latest \
@@ -251,7 +251,7 @@ Same Score file, but now we use `score-compose` to generate the Docker Compose f
 ```bash
 score-compose init
 
-score-compose generate examples/score-redis-and-postgres-and-dns.yaml \
+score-compose generate examples/score/score-redis-and-postgres-and-dns.yaml \
     --image ghcr.io/stefanprodan/podinfo:latest \
     -o compose.yaml
 ```

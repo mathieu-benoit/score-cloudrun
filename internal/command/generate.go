@@ -32,6 +32,7 @@ import (
 
 	"github.com/score-spec/score-cloudrun/internal/convert"
 	"github.com/score-spec/score-cloudrun/internal/provisioners"
+	"github.com/score-spec/score-cloudrun/internal/provisioners/loader"
 	"github.com/score-spec/score-cloudrun/internal/state"
 )
 
@@ -77,7 +78,6 @@ var generateCmd = &cobra.Command{
 			}
 
 			// apply overrides
-
 			if v, _ := cmd.Flags().GetString(generateCmdOverridesFileFlag); v != "" {
 				if err := parseAndApplyOverrideFile(v, generateCmdOverridesFileFlag, rawWorkload); err != nil {
 					return err
@@ -147,8 +147,14 @@ var generateCmd = &cobra.Command{
 
 		slog.Info("Primed resources", "#workloads", len(currentState.Workloads), "#resources", len(currentState.Resources))
 
+		localProvisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.DefaultSuffix)
+		if err != nil {
+			return fmt.Errorf("failed to load provisioners")
+		}
+		slog.Info("Loaded provisioners", "#provisioners", len(localProvisioners))
+
 		var resourcesManifests string
-		if resourcesManifests, currentState, err = provisioners.ProvisionResources(currentState, location); err != nil {
+		if resourcesManifests, currentState, err = provisioners.ProvisionResources(currentState, localProvisioners, location); err != nil {
 			return fmt.Errorf("failed to provision resources: %w", err)
 		}
 

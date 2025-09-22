@@ -208,6 +208,11 @@ resources:
       x: ${metadata.name}
 `), 0755))
 
+	assert.NoError(t, os.WriteFile(filepath.Join(td, ".score-cloudrun", "something.provisioners.yaml"), []byte(`
+- uri: default://something
+  type: something
+`), 0644))
+
 	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
 		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "location-test", "--", "score.yaml",
 	})
@@ -258,5 +263,6 @@ resource "google_cloud_run_v2_service" "example" {
 
 resource "google_service_account" "example" {
   account_id = "example"
-}`, string(raw))
+}
+`, string(raw))
 }
