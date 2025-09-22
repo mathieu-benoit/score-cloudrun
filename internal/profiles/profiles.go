@@ -35,7 +35,7 @@ const ProfilesFileSuffix = ".profiles.yaml"
 
 // LoadProfilesFromDirectory loads all workload profiles we can find in files that end in the common suffix.
 func LoadProfilesFromDirectory(path string) ([]Profile, error) {
-	slog.Debug(fmt.Sprintf("Loading provisioners with suffix %s in directory '%s'", ProfilesFileSuffix, path))
+	slog.Debug(fmt.Sprintf("Loading profiles with suffix %s in directory '%s'", ProfilesFileSuffix, path))
 	items, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
