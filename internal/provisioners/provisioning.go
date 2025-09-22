@@ -28,13 +28,13 @@ import (
 )
 
 type Provisioner struct {
-	Uri               string  `yaml:"uri"`
-	ResType           string  `yaml:"type"`
-	Class             *string `yaml:"class,omitempty"`
-	Description       string  `yaml:"description,omitempty"`
-	ManifestsTemplate string  `yaml:"manifests,omitempty"`
+	Uri               string `yaml:"uri"`
+	ResType           string `yaml:"type"`
+	Class             string `yaml:"class,omitempty"`
+	Description       string `yaml:"description,omitempty"`
+	ManifestsTemplate string `yaml:"manifests,omitempty"`
 	// Inputs is a list of inputs that the provisioner expects to be passed in.
-	Inputs map[string]interface{} `yaml:"inputs,omitempty"`
+	Inputs []string `yaml:"inputs,omitempty"`
 	// Outputs is a list of outputs that the provisioner should return.
 	Outputs map[string]interface{} `yaml:"outputs,omitempty"`
 }
