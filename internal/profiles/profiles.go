@@ -27,6 +27,8 @@ import (
 
 type Profile struct {
 	Id                string `yaml:"id"`
+	Name              string `yaml:"name"`
+	Format            string `yaml:"format"`
 	Description       string `yaml:"description,omitempty"`
 	ManifestsTemplate string `yaml:"manifests,omitempty"`
 }

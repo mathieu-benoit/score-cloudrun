@@ -1,4 +1,6 @@
-- id: default
+- id: default-terraform
+  name: default
+  format: terraform
   description: Defines the default Workload profile as Cloud Run Service with Terraform.
   manifests: |
     {{ $workloadName := .WorkloadName }}

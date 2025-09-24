@@ -175,10 +175,10 @@ var generateCmd = &cobra.Command{
 		for workloadName := range currentState.Workloads {
 			workloadProfileName := "default"
 			profileIndex := slices.IndexFunc(localProfiles, func(profile profiles.Profile) bool {
-				return profile.Id == workloadProfileName
+				return profile.Name == workloadProfileName
 			})
 			if profileIndex < 0 {
-				return fmt.Errorf("workload profile '%s' is not supported by any workload profiles templates. Please implement a custom workload profile template to support it", workloadProfileName)
+				return fmt.Errorf("workload profile '%s' is not supported. Please implement a custom workload profile to support it", workloadProfileName)
 			}
 
 			if workloadManifest, err := convert.Workload(localProfiles[profileIndex], currentState, workloadName, location, projectId); err != nil {
