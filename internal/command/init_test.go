@@ -17,7 +17,6 @@ package command
 import (
 	"context"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -41,11 +40,6 @@ func TestInitNominal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "", stdout)
 	assert.NotEqual(t, "", strings.TrimSpace(stderr))
-
-	assert.NoError(t, os.WriteFile(filepath.Join(td, ".score-cloudrun", "test.profiles.yaml"), []byte(`
-- id: default
-  name: default
-`), 0644))
 
 	stdout, stderr, err = executeAndResetCommand(context.Background(), rootCmd, []string{
 		"generate", "score.yaml", "-p", "project-test", "-l", "location-test",

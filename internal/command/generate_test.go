@@ -108,15 +108,10 @@ func TestInitAndGenerateWithBadScore(t *testing.T) {
 }
 
 func TestInitAndGenerate_with_sample(t *testing.T) {
-	currentDirectory, err := os.Getwd()
-	require.NoError(t, err)
-	workloadProfile, err := os.ReadFile(currentDirectory + "/../../examples/profiles/default-terraform.profiles.yaml")
-	require.NoError(t, err)
 	td := changeToTempDir(t)
 	stdout, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
 	require.NoError(t, err)
 	assert.Equal(t, "", stdout)
-	assert.NoError(t, os.WriteFile(filepath.Join(td, ".score-cloudrun", "test.profiles.yaml"), workloadProfile, 0644))
 	stdout, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
 		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "location-test", "--", "score.yaml",
 	})
@@ -158,10 +153,6 @@ resource "google_service_account" "example" {
 }
 
 func TestInitAndGenerate_with_full_example(t *testing.T) {
-	currentDirectory, err := os.Getwd()
-	require.NoError(t, err)
-	workloadProfile, err := os.ReadFile(currentDirectory + "/../../examples/profiles/default-terraform.profiles.yaml")
-	require.NoError(t, err)
 	td := changeToTempDir(t)
 	stdout, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
 	require.NoError(t, err)
@@ -221,7 +212,6 @@ resources:
 - uri: default://something
   type: something
 `), 0644))
-	assert.NoError(t, os.WriteFile(filepath.Join(td, ".score-cloudrun", "test.profiles.yaml"), workloadProfile, 0644))
 
 	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
 		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "location-test", "--", "score.yaml",

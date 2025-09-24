@@ -16,6 +16,7 @@ package profiles
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"log/slog"
 	"os"
@@ -34,6 +35,14 @@ type Profile struct {
 }
 
 const ProfilesFileSuffix = ".profiles.yaml"
+const DefaultProfileFileName = "default-terraform.profiles.yaml"
+
+//go:embed default-terraform.profiles.yaml
+var defaultProfileContent string
+
+func GetDefaultProfileContent() string {
+	return defaultProfileContent
+}
 
 // LoadProfilesFromDirectory loads all workload profiles we can find in files that end in the common suffix.
 func LoadProfilesFromDirectory(path string) ([]Profile, error) {

@@ -15,21 +15,25 @@
 package command
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/score-spec/score-go/framework"
 	scoretypes "github.com/score-spec/score-go/types"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/score-spec/score-cloudrun/internal/profiles"
 	"github.com/score-spec/score-cloudrun/internal/state"
 )
 
 const (
-	initCmdFileFlag = "file"
+	initCmdFileFlag             = "file"
+	initCmdNoDefaultProfileFlag = "no-default-workload-profile"
 )
 
 var initCmd = &cobra.Command{
@@ -62,6 +66,37 @@ var initCmd = &cobra.Command{
 			if err := sd.Persist(); err != nil {
 				return fmt.Errorf("failed to persist new state directory: %w", err)
 			}
+		}
+
+		// create and write the default profile file if it doesn't already exist
+		disableDefaultProfile, err := cmd.Flags().GetBool(initCmdNoDefaultProfileFlag)
+		if err != nil {
+			return fmt.Errorf("failed to parse --%s flag: %w", initCmdNoDefaultProfileFlag, err)
+		}
+
+		if !disableDefaultProfile {
+			defaultProfile := filepath.Join(sd.Path, profiles.DefaultProfileFileName)
+
+			if _, err := os.Stat(defaultProfile); err != nil {
+				if !errors.Is(err, os.ErrNotExist) {
+					return fmt.Errorf("failed to check for existing default workload profile file: %w", err)
+				}
+
+				f, err := os.OpenFile(defaultProfile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+				if err != nil {
+					return fmt.Errorf("failed to create default workload profile file: %w", err)
+				}
+				defer f.Close()
+
+				slog.Info("Writing default workload profile file", "path", defaultProfile)
+				if _, err := f.WriteString(profiles.GetDefaultProfileContent()); err != nil {
+					return fmt.Errorf("failed to write default workload profile content: %w", err)
+				}
+			} else {
+				slog.Info("Default workload profile file already exists, skipping", "path", defaultProfile)
+			}
+		} else {
+			slog.Info("Skipping default workload profile due to --no-default-workload-profile flag")
 		}
 
 		initCmdScoreFile, _ := cmd.Flags().GetString(initCmdFileFlag)
@@ -100,5 +135,6 @@ var initCmd = &cobra.Command{
 
 func init() {
 	initCmd.Flags().StringP(initCmdFileFlag, "f", "score.yaml", "The score file to initialize")
+	initCmd.Flags().Bool(initCmdNoDefaultProfileFlag, false, "Disable generation of the default workload profile file")
 	rootCmd.AddCommand(initCmd)
 }
