@@ -33,7 +33,7 @@ import (
 
 const (
 	initCmdFileFlag             = "file"
-	initCmdNoDefaultProfileFlag = "no-default-workload-profile"
+	initCmdNoDefaultProfileFlag = "no-default-profile"
 )
 
 var initCmd = &cobra.Command{
@@ -102,7 +102,7 @@ var initCmd = &cobra.Command{
 				slog.Info("Default workload profile file already exists, skipping", "path", defaultProfile)
 			}
 		} else {
-			slog.Info("Skipping default workload profile due to --no-default-workload-profile flag")
+			slog.Info("Skipping default workload profile due to --no-default-profile flag")
 		}
 
 		initCmdScoreFile, _ := cmd.Flags().GetString(initCmdFileFlag)
