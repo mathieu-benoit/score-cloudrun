@@ -86,7 +86,13 @@ var initCmd = &cobra.Command{
 				if err != nil {
 					return fmt.Errorf("failed to create default workload profile file: %w", err)
 				}
-				defer f.Close()
+
+				defer func(f *os.File) {
+					if f == nil {
+						return
+					}
+					err = errors.Join(err, f.Close())
+				}(f)
 
 				slog.Info("Writing default workload profile file", "path", defaultProfile)
 				if _, err := f.WriteString(profiles.GetDefaultProfileContent()); err != nil {
