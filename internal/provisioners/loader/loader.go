@@ -33,7 +33,7 @@ import (
 	"github.com/score-spec/score-cloudrun/internal/provisioners"
 )
 
-const DefaultSuffix = ".provisioners.yaml"
+const ProvisionersFileSuffix = ".provisioners.yaml"
 
 // LoadProvisionersFromDirectory loads all provisioners we can find in files that end in the common suffix.
 func LoadProvisionersFromDirectory(path string, suffix string) ([]provisioners.Provisioner, error) {
@@ -72,7 +72,7 @@ func LoadProvisioners(raw []byte) ([]provisioners.Provisioner, error) {
 		dec := yaml.NewDecoder(bytes.NewReader(intermediate))
 		dec.KnownFields(true)
 		if err := dec.Decode(&provisioner); err != nil {
-			slog.Info("YAML reader ko", "error", err)
+			slog.Info("YAML reader error", "error", err)
 			return nil, err
 		}
 		if provisioner.Uri == "" {
@@ -101,7 +101,7 @@ func SaveProvisionerToDirectory(path string, provisionerUrl string, data []byte)
 	// Append a heading indicating the source and time
 	data = append([]byte(fmt.Sprintf("# Downloaded from %s at %s\n", provisionerUrl, time.Now())), data...)
 	hashValue := sha256.Sum256([]byte(provisionerUrl))
-	hashName := base64.RawURLEncoding.EncodeToString(hashValue[:16]) + DefaultSuffix
+	hashName := base64.RawURLEncoding.EncodeToString(hashValue[:16]) + ProvisionersFileSuffix
 	// We use a time prefix to always put the most recently downloaded files first lexicographically. So subtract
 	// time from uint64 and convert it into a base64 two's complement binary representation.
 	timePrefix := base64.RawURLEncoding.EncodeToString(binary.BigEndian.AppendUint64([]byte{}, uint64(math.MaxInt64-time.Now().UnixNano())))

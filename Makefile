@@ -11,6 +11,9 @@ help:
 .PHONY: .FORCE
 .FORCE:
 
+lint:
+	golangci-lint run
+
 build:
 	go build ./cmd/score-cloudrun/
 

@@ -31,13 +31,13 @@ import (
 var (
 	provisionersGroup = &cobra.Command{
 		Use:   "provisioners",
-		Short: "Subcommands related to provisioners",
+		Short: "Subcommands related to resources provisioners",
 	}
 	provisionersList = &cobra.Command{
 		Use:   "list [--format table|json]",
-		Short: "List the provisioners",
-		Long: `The list command will list out the provisioners. This requires an active score cloudrun state
-after 'init' has been run. The list of provisioners will be empty if no provisioners are defined.
+		Short: "List the resources provisioners",
+		Long: `The list command will list out the resources provisioners. This requires an active score cloudrun state
+after 'init' has been run. The list of resources provisioners will be empty if no provisioners are defined.
 `,
 		Args:          cobra.ArbitraryArgs,
 		SilenceErrors: true,
@@ -53,15 +53,15 @@ func listProvisioners(cmd *cobra.Command, args []string) error {
 	} else if !ok {
 		return fmt.Errorf("no state directory found, run 'score-cloudrun init' first")
 	}
-	slog.Debug(fmt.Sprintln("Listing provisioners"))
+	slog.Debug(fmt.Sprintln("Listing resources provisioners"))
 
-	provisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.DefaultSuffix)
+	provisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.ProvisionersFileSuffix)
 	if err != nil {
-		return fmt.Errorf("failed to load provisioners in %s: %w", sd.Path, err)
+		return fmt.Errorf("failed to load resources provisioners in %s: %w", sd.Path, err)
 	}
 
 	if len(provisioners) == 0 {
-		slog.Info("No provisioners found")
+		slog.Info("No resources provisioners found")
 		return nil
 	}
 
