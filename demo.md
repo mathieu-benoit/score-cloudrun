@@ -16,7 +16,12 @@ TOC:
 - [What's coming next](#whats-coming-next)
 
 ```bash
+make build
+alias score-cloudrun=./score-cloudrun
+
 score-cloudrun init
+
+cp examples/provisioners/* .score-cloudrun
 ```
 
 ## As Dev, I define a very basic workload
@@ -63,17 +68,17 @@ score-cloudrun provisioners list
 ```
 
 ```none
-+----------+-------+------------------+------------------------------------------+------------------------------------------------------------------------------+
-|   TYPE   | CLASS |      INPUTS      |                 OUTPUTS                  |                                 DESCRIPTION                                  |
-+----------+-------+------------------+------------------------------------------+------------------------------------------------------------------------------+
-| dns      |       |                  | host                                     | Makes the Cloud Run Service publicly available.                              |
-+----------+-------+------------------+------------------------------------------+------------------------------------------------------------------------------+
-| postgres |       |                  | password, port, username, database, host | Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource. |
-+----------+-------+------------------+------------------------------------------+------------------------------------------------------------------------------+
-| redis    |       |                  | host, password, port, username           | Generates a Memorystore (Redis) Terraform resource.                          |
-+----------+-------+------------------+------------------------------------------+------------------------------------------------------------------------------+
-| route    |       | host, path, port |                                          | Defines an empty route.                                                      |
-+----------+-------+------------------+------------------------------------------+------------------------------------------------------------------------------+
++----------+-------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+|   TYPE   | CLASS |      INPUTS      |                 OUTPUTS                  |                                 DESCRIPTION                                 |
++----------+-------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| dns      |       |                  | host                                     | Makes the Cloud Run Service publicly available                              |
++----------+-------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| postgres |       |                  | username, database, host, password, port | Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource |
++----------+-------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| redis    |       |                  | username, host, password, port           | Generates a Memorystore (Redis) Terraform resource                          |
++----------+-------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| route    |       | host, path, port |                                          | Defines an empty route                                                      |
++----------+-------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
 ```
 
 ## As Dev, I now want to use a Redis database
@@ -271,10 +276,10 @@ ae3c395e038b   mirror.gcr.io/postgres:17-alpine      "docker-entrypoint.s…"   
 
 ## What's coming next
 
-- On purpose, this demo is not illustrated how Platform Engineers can bring their own Terraform manifests, this will be illustrated soon. The idea was to focus on the Developer Experience.
 - `score-cloudrun generate --source`
-- `score-cloudrun generate --workload-profile terraform|config-connector|knative`
-- `score-cloudrun init --workload-profiles`
+- `score-cloudrun generate --format terraform|config-connector|knative`
+- `score-cloudrun init --profiles`
+- `score-cloudrun init --provisioners`
 - More features like Job, Volumes, Traffic, etc.
 - Officially releasing this at KubeCon NA 2025 Atlanta
 - We need your feedback!

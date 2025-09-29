@@ -1,6 +1,6 @@
 - uri: default-terraform://default-provisioners/route
   type: route
-  description: Defines an empty route.
+  description: Defines an empty route
   inputs:
     - host
     - path

@@ -1,6 +1,6 @@
 - uri: default-terraform://default-provisioners/public-dns
   type: dns
-  description: Makes the Cloud Run Service publicly available.
+  description: Makes the Cloud Run Service publicly available
   outputs:
     host: "${google_cloud_run_v2_service.example.uri}"
   manifests: |
