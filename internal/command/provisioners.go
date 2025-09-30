@@ -36,7 +36,7 @@ var (
 	provisionersList = &cobra.Command{
 		Use:   "list [--format table|json]",
 		Short: "List the resources provisioners",
-		Long: `The list command will list out the resources provisioners. This requires an active score cloudrun state
+		Long: `The list command will list out the resources provisioners. This requires an active score-cloudrun state
 after 'init' has been run. The list of resources provisioners will be empty if no provisioners are defined.
 `,
 		Args:          cobra.ArbitraryArgs,
@@ -69,9 +69,9 @@ func listProvisioners(cmd *cobra.Command, args []string) error {
 	return displayProvisioners(provisioners, outputFormat)
 }
 
-func displayProvisioners(loadedProvisioners []provisioners.Provisioner, outputFormat string) error {
+func displayProvisioners(provisioners []provisioners.Provisioner, outputFormat string) error {
 	var outputFormatter formatter.OutputFormatter
-	sortedProvisioners := sortProvisionersByType(loadedProvisioners)
+	sortedProvisioners := sortProvisionersByType(provisioners)
 
 	switch outputFormat {
 	case "json":
