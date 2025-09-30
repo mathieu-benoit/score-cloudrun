@@ -21,7 +21,9 @@ Here are some key features of `score-cloudrun`, bringing the advantages of both,
 
 ![](score-cloudrun.png)
 
-## Use 
+## Usage
+
+More information about the `score-cloudrun` CLI commands [here](./docs/cli.md).
 
 From source code:
 
@@ -55,7 +57,7 @@ terrraform plan
 
 ## Demos!
 
-[Demos!](demo.md)
+[Demos!](docs/demo.md)
 
 ## Features not covered
 
