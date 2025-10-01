@@ -27,7 +27,7 @@ func ListAnnotations(metadata map[string]interface{}) []string {
 	a, ok := metadata["annotations"].(map[string]interface{})
 	if ok {
 		out := make([]string, 0, len(a))
-		for s, _ := range a {
+		for s := range a {
 			out = append(out, s)
 		}
 		slices.Sort(out)
