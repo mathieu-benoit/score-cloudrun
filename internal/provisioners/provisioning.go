@@ -53,11 +53,12 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, l
 	for _, resUid := range orderedResources {
 		resState := out.Resources[resUid]
 
+		slog.Info(fmt.Sprintf("Provisioner name %s and class %s", resUid.Type(), resUid.Class()))
 		provisionerIndex := slices.IndexFunc(provisioners, func(provisioner Provisioner) bool {
-			return provisioner.ResType == resUid.Type()
+			return provisioner.ResType == resUid.Type() && provisioner.Class == resUid.Class()
 		})
 		if provisionerIndex < 0 {
-			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. Please implement a custom resource provisioner to support this resource type", resUid)
+			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. Please implement a custom resource provisioner to support this resource type '%s' with class '%s'", resUid, resUid.Type(), resUid.Class())
 		}
 
 		var params map[string]interface{}

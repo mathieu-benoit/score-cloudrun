@@ -1,5 +1,6 @@
 - uri: default-terraform://default-provisioners/cloud-sql-postgres
   type: postgres
+  class: default
   description: Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource
   outputs:
     host: "${google_sql_database_instance.instance.name}"
