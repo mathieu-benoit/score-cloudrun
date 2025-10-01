@@ -73,13 +73,13 @@ score-cloudrun provisioners list
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
 | dns      | external |                  | host                                     | Makes the Cloud Run Service publicly available                              |
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| dns      |          |                  | host                                     | Uses the default Cloud Run Service endpoint                                 |
+| dns      | default  |                  | host                                     | Uses the default Cloud Run Service endpoint                                 |
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| postgres |          |                  | password, port, username, database, host | Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource |
+| postgres | default  |                  | database, host, password, port, username | Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource |
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| redis    |          |                  | password, port, username, host           | Generates a Memorystore (Redis) Terraform resource                          |
+| redis    | default  |                  | host, password, port, username           | Generates a Memorystore (Redis) Terraform resource                          |
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| route    |          | host, path, port |                                          | Defines an empty route                                                      |
+| route    | default  | host, path, port |                                          | Defines an empty route                                                      |
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
 ```
 
