@@ -9,6 +9,7 @@ Objectives:
 TOC:
 - [As Dev, I define a very basic workload](#as-dev-i-define-a-very-basic-workload)
 - [As Dev, I want to know what resource dependencies I can use alongside my workload](#as-dev-i-want-to-know-what-resource-dependencies-i-can-use-alongside-my-workload)
+- [As Dev, I want to know what type of workload profiles are supported by my platform](#as-dev-i-want-to-know-what-type-of-workload-profiles-are-supported-by-my-platform)
 - [As Dev, I now want to use a Redis database](#as-dev-i-now-want-to-use-a-redis-database)
 - [As Dev, I now want to use a PostgreSQL database](#as-dev-i-now-want-to-use-a-postgresql-database)
 - [As Dev, I now want to expose my workload via a DNS](#as-dev-i-now-want-to-expose-my-workload-via-a-dns)
@@ -81,6 +82,22 @@ score-cloudrun provisioners list
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
 | route    | default  | host, path, port |                                          | Defines an empty route                                                      |
 +----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+```
+
+## As Dev, I want to know what type of workload profiles are supported by my platform
+
+```bash
+score-cloudrun profiles list
+```
+
+```none
++---------+-----------+---------------------------------------------------------------------------+
+|  NAME   |  FORMAT   |                                DESCRIPTION                                |
++---------+-----------+---------------------------------------------------------------------------+
+| default | terraform | Defines the default Workload profile as Cloud Run Service with Terraform. |
++---------+-----------+---------------------------------------------------------------------------+
+| job     | terraform | Defines the Workload profile as Cloud Run Job with Terraform.             |
++---------+-----------+---------------------------------------------------------------------------+
 ```
 
 ## As Dev, I now want to use a Redis database
@@ -282,6 +299,6 @@ ae3c395e038b   mirror.gcr.io/postgres:17-alpine      "docker-entrypoint.s…"   
 - `score-cloudrun generate --format terraform|config-connector|knative`
 - `score-cloudrun init --profiles`
 - `score-cloudrun init --provisioners`
-- More features like Job, Volumes, Traffic, etc.
+- More features like Volumes, Traffic, etc.
 - Officially releasing this at KubeCon NA 2025 Atlanta
 - We need your feedback!
