@@ -3,7 +3,11 @@
   format: terraform
   description: Defines the Workload profile as Cloud Run Job with Terraform.
   manifests: |
-    {{ $workloadName := .WorkloadName }}
+    {{- $workloadName := .WorkloadName }}
+    locals {
+      network = "default"
+    }
+    
     resource "google_cloud_run_v2_job" "{{ $workloadName }}" {
       project = "{{ .ProjectId }}"
       location = "{{ .Location }}"
@@ -54,6 +58,12 @@
             {{- end }}
           }
           {{- end }}
+          vpc_access {
+            network_interfaces {
+              network    = local.network
+              subnetwork = local.network
+            }
+          }
         }
       }
     }

@@ -8,11 +8,6 @@
     username: ""
     password: "${google_redis_instance.memorystore.auth_string}"
   manifests: |
-    variable "network" {
-      type    = string
-      default = "default"
-    }
-
     resource "random_string" "memorystore_instance_name" {
       length  = 10
       special = false
@@ -26,9 +21,5 @@
       redis_version      = "REDIS_7_2"
       region             = "{{ .Location }}"
       auth_enabled       = true
-      authorized_network = data.google_compute_network.vpc.id
-    }
-
-    data "google_compute_network" "vpc" {
-      name = var.network
+      authorized_network = local.network
     }

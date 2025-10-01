@@ -4,6 +4,9 @@
   description: Defines the default Workload profile as Cloud Run Service with Terraform.
   manifests: |
     {{- $workloadName := .WorkloadName }}{{- $dnsEnabled := false }}
+    locals {
+      network = "default"
+    }
     {{- range $resourceName, $resource := .Spec.Resources }}{{- if eq $resource.Type "dns" }}{{- $dnsEnabled := or (true $dnsEnabled) }}{{- end }}{{- end }}
     resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       provider = {{ if not $dnsEnabled }}google-beta{{ else }}google{{ end }}
@@ -57,6 +60,12 @@
           {{- end }}
         }
         {{- end }}
+        vpc_access {
+          network_interfaces {
+            network    = local.network
+            subnetwork = local.network
+          }
+        }
       }
     }
 
