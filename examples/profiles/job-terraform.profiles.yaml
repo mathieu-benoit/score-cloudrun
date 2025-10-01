@@ -1,0 +1,66 @@
+- id: job-terraform
+  name: job
+  format: terraform
+  description: Defines the Workload profile as Cloud Run Job with Terraform.
+  manifests: |
+    {{ $workloadName := .WorkloadName }}
+    provider "google" {
+      project = "{{ .ProjectId }}"
+    }
+
+    resource "google_cloud_run_v2_job" "{{ $workloadName }}" {
+      name     = "{{ $workloadName }}"
+      location = "{{ .Location }}"
+      deletion_protection = false
+
+      template {
+        template {
+          service_account = google_service_account.{{ $workloadName }}.email
+
+          {{- range $containerName, $container := .Spec.Containers }}
+          containers {
+            name  = "{{ $containerName }}"
+            image = "{{ $container.Image }}"
+            
+            {{- range $variableName, $variableValue := $container.Variables }}
+            env {
+              name = "{{ $variableName }}"
+              value = "{{ $variableValue }}"
+            }{{- end }}
+
+            {{- if (gt (len $container.Command) 0) }}
+            command = [
+              {{- range $i, $cmd := $container.Command }}
+              "{{ $cmd }}"{{ if (gt (len $container.Command) $i) }},{{ end }}
+              {{- end }}
+            ]
+            {{- end }}
+
+            {{- if (gt (len $container.Args) 0) }}
+            args = [
+              {{- range $i, $arg := $container.Args }}
+              "{{ $arg }}"{{ if (gt (len $container.Args) $i) }},{{ end }}
+              {{- end }}
+            ]{{- end }}
+
+            {{- if and (ne $container.LivenessProbe nil)  (ne $container.LivenessProbe.HttpGet nil) }}
+            liveness_probe {
+              http_get {
+                {{- if (ne $container.LivenessProbe.HttpGet.Path "") }}
+                path = "{{ $container.LivenessProbe.HttpGet.Path }}"
+                {{- end }}
+                {{- if (ne $container.LivenessProbe.HttpGet.Port 0) }}
+                port = {{ $container.LivenessProbe.HttpGet.Port }}
+                {{- end}}
+              }
+            }
+            {{- end }}
+          }
+          {{- end }}
+        }
+      }
+    }
+
+    resource "google_service_account" "{{ $workloadName }}" {
+      account_id = "{{ $workloadName }}"
+    }
