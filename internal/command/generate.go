@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	annotations "github.com/score-spec/score-cloudrun/internal"
 	"github.com/score-spec/score-cloudrun/internal/convert"
 	"github.com/score-spec/score-cloudrun/internal/profiles"
 	"github.com/score-spec/score-cloudrun/internal/provisioners"
@@ -173,7 +174,10 @@ var generateCmd = &cobra.Command{
 
 		out := new(bytes.Buffer)
 		for workloadName := range currentState.Workloads {
-			workloadProfileName := "default"
+			workloadProfileName, found := annotations.FindAnnotation(currentState.Workloads[workloadName].Spec.Metadata, annotations.WorkloadProfileAnnotation)
+			if !found {
+				workloadProfileName = "default"
+			}
 			profileIndex := slices.IndexFunc(localProfiles, func(profile profiles.Profile) bool {
 				return profile.Name == workloadProfileName
 			})
