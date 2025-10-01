@@ -53,7 +53,6 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, l
 	for _, resUid := range orderedResources {
 		resState := out.Resources[resUid]
 
-		slog.Info(fmt.Sprintf("Provisioner name %s and class %s", resUid.Type(), resUid.Class()))
 		provisionerIndex := slices.IndexFunc(provisioners, func(provisioner Provisioner) bool {
 			return provisioner.ResType == resUid.Type() && provisioner.Class == resUid.Class()
 		})
