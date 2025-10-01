@@ -211,6 +211,7 @@ resources:
 	assert.NoError(t, os.WriteFile(filepath.Join(td, ".score-cloudrun", "something.provisioners.yaml"), []byte(`
 - uri: default://something
   type: something
+  class: default
 `), 0644))
 
 	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
