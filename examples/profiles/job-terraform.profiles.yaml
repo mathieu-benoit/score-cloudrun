@@ -4,13 +4,10 @@
   description: Defines the Workload profile as Cloud Run Job with Terraform.
   manifests: |
     {{ $workloadName := .WorkloadName }}
-    provider "google" {
-      project = "{{ .ProjectId }}"
-    }
-
     resource "google_cloud_run_v2_job" "{{ $workloadName }}" {
-      name     = "{{ $workloadName }}"
+      project = "{{ .ProjectId }}"
       location = "{{ .Location }}"
+      name     = "{{ $workloadName }}"
       deletion_protection = false
 
       template {
@@ -62,5 +59,6 @@
     }
 
     resource "google_service_account" "{{ $workloadName }}" {
+      project = "{{ .ProjectId }}"
       account_id = "{{ $workloadName }}"
     }

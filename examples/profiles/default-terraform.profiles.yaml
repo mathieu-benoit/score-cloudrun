@@ -3,16 +3,16 @@
   format: terraform
   description: Defines the default Workload profile as Cloud Run Service with Terraform.
   manifests: |
-    {{ $workloadName := .WorkloadName }}
-    provider "google" {
-      project = "{{ .ProjectId }}"
-    }
-
+    {{- $workloadName := .WorkloadName }}{{- $dnsEnabled := false }}
+    {{- range $resourceName, $resource := .Spec.Resources }}{{- if eq $resource.Type "dns" }}{{- $dnsEnabled := or (true $dnsEnabled) }}{{- end }}{{- end }}
     resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
-      name     = "{{ $workloadName }}"
+      provider = {{ if not $dnsEnabled }}google-beta{{ else }}google{{ end }}
+      project = "{{ .ProjectId }}"
       location = "{{ .Location }}"
+      name     = "{{ $workloadName }}"
       deletion_protection = false
       ingress = "INGRESS_TRAFFIC_ALL"
+      default_uri_disabled = {{ not $dnsEnabled }}
 
       template {
         service_account = google_service_account.{{ $workloadName }}.email
@@ -61,5 +61,6 @@
     }
 
     resource "google_service_account" "{{ $workloadName }}" {
+      project = "{{ .ProjectId }}"
       account_id = "{{ $workloadName }}"
     }
