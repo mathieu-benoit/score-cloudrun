@@ -53,7 +53,7 @@ func listProfiles(cmd *cobra.Command, args []string) error {
 	}
 	slog.Debug(fmt.Sprintln("Listing workload profiles"))
 
-	profiles, err := profiles.LoadProfilesFromDirectory(sd.Path)
+	profiles, err := profiles.LoadProfilesFromDirectory(sd.Path, "")
 	if err != nil {
 		return fmt.Errorf("failed to load workload profiles in %s: %w", sd.Path, err)
 	}

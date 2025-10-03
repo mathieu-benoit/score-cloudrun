@@ -45,6 +45,7 @@ const (
 	generateCmdOutputFlag           = "output"
 	generateCmdLocationFlag         = "location"
 	generateCmdProjectIdFlag        = "project-id"
+	generateCmdOutputFormatFlag     = "output-format"
 )
 
 var generateCmd = &cobra.Command{
@@ -166,7 +167,12 @@ var generateCmd = &cobra.Command{
 		}
 		slog.Info("Persisted state file")
 
-		localProfiles, err := profiles.LoadProfilesFromDirectory(sd.Path)
+		outputFormat, _ := cmd.Flags().GetString(generateCmdOutputFormatFlag)
+		if outputFormat == "" {
+			return fmt.Errorf("no output format specified")
+		}
+
+		localProfiles, err := profiles.LoadProfilesFromDirectory(sd.Path, outputFormat)
 		if err != nil {
 			return fmt.Errorf("failed to load profiles")
 		}
@@ -260,5 +266,6 @@ func init() {
 	generateCmd.Flags().StringP(generateCmdImageFlag, "i", "", "An optional container image to use for any container with image == '.'")
 	generateCmd.Flags().StringP(generateCmdLocationFlag, "l", "", "The Google Cloud Location to deploy to")
 	generateCmd.Flags().StringP(generateCmdProjectIdFlag, "p", "", "The Google Cloud Project ID to deploy to")
+	generateCmd.Flags().StringP(generateCmdOutputFormatFlag, "", "terraform", "The format of the output manifests file. Associated workload profile and provisioners will be used based on this output format")
 	rootCmd.AddCommand(generateCmd)
 }
