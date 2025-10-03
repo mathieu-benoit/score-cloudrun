@@ -30,7 +30,8 @@ import (
 type Provisioner struct {
 	Uri               string `yaml:"uri"`
 	ResType           string `yaml:"type"`
-	Class             string `yaml:"class,omitempty"`
+	Format            string `yaml:"format"`
+	Class             string `yaml:"class"`
 	Description       string `yaml:"description,omitempty"`
 	ManifestsTemplate string `yaml:"manifests,omitempty"`
 	// Inputs is a list of inputs that the provisioner expects to be passed in.

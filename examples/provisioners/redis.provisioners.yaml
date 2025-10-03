@@ -1,6 +1,7 @@
 - uri: default-terraform://default-provisioners/memorystore-redis
   type: redis
   class: default
+  format: terraform
   description: Generates a Memorystore (Redis) Terraform resource
   outputs:
     host: ${google_redis_instance.memorystore.host}

@@ -1,6 +1,7 @@
 - uri: default-terraform://default-provisioners/default-dns
   type: dns
   class: default
+  format: terraform
   description: Uses the default Cloud Run Service endpoint
   outputs:
     host: "${google_cloud_run_v2_service.example.uri}"
