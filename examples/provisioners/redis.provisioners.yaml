@@ -16,6 +16,7 @@
     }
 
     resource "google_redis_instance" "memorystore" {
+      project            = "{{ .ProjectId }}"
       name               = "redis-${random_string.memorystore_instance_name.result}"
       memory_size_gb     = 1
       redis_version      = "REDIS_7_2"

@@ -39,7 +39,7 @@ type Provisioner struct {
 	Outputs map[string]interface{} `yaml:"outputs,omitempty"`
 }
 
-func ProvisionResources(currentState *state.State, provisioners []Provisioner, location string) (string, *state.State, error) {
+func ProvisionResources(currentState *state.State, provisioners []Provisioner, location string, projectId string) (string, *state.State, error) {
 	out := currentState
 	manifests := ""
 
@@ -84,7 +84,7 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, l
 		}
 
 		var resourceManifest string
-		resourceManifest, err = generateResourceManifest(provisioners[provisionerIndex].ManifestsTemplate, location)
+		resourceManifest, err = generateResourceManifest(provisioners[provisionerIndex].ManifestsTemplate, location, projectId)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to generate resource manifest %s: %w", resUid.Type(), err)
 		}
@@ -98,7 +98,7 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, l
 	return manifests, out, nil
 }
 
-func generateResourceManifest(resourceTypeTemplate string, location string) (string, error) {
+func generateResourceManifest(resourceTypeTemplate string, location string, projectId string) (string, error) {
 	t, err := template.New("template").Parse(resourceTypeTemplate)
 	if err != nil {
 		return "", err
@@ -107,9 +107,11 @@ func generateResourceManifest(resourceTypeTemplate string, location string) (str
 	var buf bytes.Buffer
 
 	data := struct {
-		Location string
+		Location  string
+		ProjectId string
 	}{
-		Location: location,
+		Location:  location,
+		ProjectId: projectId,
 	}
 
 	if err := t.Execute(&buf, data); err != nil {
