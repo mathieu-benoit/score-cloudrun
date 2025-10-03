@@ -120,15 +120,17 @@ func TestInitAndGenerate_with_sample(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
 	assert.NoError(t, err)
 	assert.Equal(t, `
-provider "google" {
-  project = "project-test"
+locals {
+  network = "default"
 }
-
 resource "google_cloud_run_v2_service" "example" {
-  name     = "example"
+  provider = google-beta
+  project = "project-test"
   location = "location-test"
+  name     = "example"
   deletion_protection = false
   ingress = "INGRESS_TRAFFIC_ALL"
+  default_uri_disabled = true
 
   template {
     service_account = google_service_account.example.email
@@ -136,10 +138,17 @@ resource "google_cloud_run_v2_service" "example" {
       name  = "main"
       image = "stefanprodan/podinfo"
     }
+    vpc_access {
+      network_interfaces {
+        network    = local.network
+        subnetwork = local.network
+      }
+    }
   }
 }
 
 resource "google_service_account" "example" {
+  project = "project-test"
   account_id = "example"
 }`, string(raw))
 
@@ -221,15 +230,17 @@ resources:
 	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
 	assert.NoError(t, err)
 	assert.Equal(t, `
-provider "google" {
-  project = "project-test"
+locals {
+  network = "default"
 }
-
 resource "google_cloud_run_v2_service" "example" {
-  name     = "example"
+  provider = google-beta
+  project = "project-test"
   location = "location-test"
+  name     = "example"
   deletion_protection = false
   ingress = "INGRESS_TRAFFIC_ALL"
+  default_uri_disabled = true
 
   template {
     service_account = google_service_account.example.email
@@ -259,10 +270,17 @@ resource "google_cloud_run_v2_service" "example" {
         }
       }
     }
+    vpc_access {
+      network_interfaces {
+        network    = local.network
+        subnetwork = local.network
+      }
+    }
   }
 }
 
 resource "google_service_account" "example" {
+  project = "project-test"
   account_id = "example"
 }
 `, string(raw))
