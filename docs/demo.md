@@ -296,7 +296,7 @@ ae3c395e038b   mirror.gcr.io/postgres:17-alpine      "docker-entrypoint.s…"   
 ## What's coming next
 
 - `score-cloudrun generate --source`
-- `score-cloudrun generate --format terraform|config-connector|knative`
+- `score-cloudrun generate --format terraform|config-connector|knative` --> `--target`? or `--target-type`?
 - `score-cloudrun init --profiles`
 - `score-cloudrun init --provisioners`
 - More features like Volumes, Traffic, etc.
