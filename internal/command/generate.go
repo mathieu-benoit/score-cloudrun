@@ -45,6 +45,7 @@ const (
 	generateCmdOutputFlag           = "output"
 	generateCmdLocationFlag         = "location"
 	generateCmdProjectIdFlag        = "project-id"
+	generateCmdOutputFormatFlag     = "output-format"
 )
 
 var generateCmd = &cobra.Command{
@@ -149,14 +150,19 @@ var generateCmd = &cobra.Command{
 
 		slog.Info("Primed resources", "#workloads", len(currentState.Workloads), "#resources", len(currentState.Resources))
 
-		localProvisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.ProvisionersFileSuffix)
+		outputFormat, _ := cmd.Flags().GetString(generateCmdOutputFormatFlag)
+		if outputFormat == "" {
+			return fmt.Errorf("no output format specified")
+		}
+
+		localProvisioners, err := loader.LoadProvisionersFromDirectory(sd.Path, loader.ProvisionersFileSuffix, outputFormat)
 		if err != nil {
 			return fmt.Errorf("failed to load provisioners")
 		}
 		slog.Info("Loaded provisioners", "#provisioners", len(localProvisioners))
 
 		var resourcesManifests string
-		if resourcesManifests, currentState, err = provisioners.ProvisionResources(currentState, localProvisioners, location, projectId); err != nil {
+		if resourcesManifests, currentState, err = provisioners.ProvisionResources(currentState, localProvisioners, outputFormat, location, projectId); err != nil {
 			return fmt.Errorf("failed to provision resources: %w", err)
 		}
 
@@ -166,7 +172,7 @@ var generateCmd = &cobra.Command{
 		}
 		slog.Info("Persisted state file")
 
-		localProfiles, err := profiles.LoadProfilesFromDirectory(sd.Path)
+		localProfiles, err := profiles.LoadProfilesFromDirectory(sd.Path, outputFormat)
 		if err != nil {
 			return fmt.Errorf("failed to load profiles")
 		}
@@ -179,10 +185,10 @@ var generateCmd = &cobra.Command{
 				workloadProfileName = "default"
 			}
 			profileIndex := slices.IndexFunc(localProfiles, func(profile profiles.Profile) bool {
-				return profile.Name == workloadProfileName
+				return profile.Name == workloadProfileName && profile.Format == outputFormat
 			})
 			if profileIndex < 0 {
-				return fmt.Errorf("workload profile '%s' is not supported. Please implement a custom workload profile to support it", workloadProfileName)
+				return fmt.Errorf("workload profile '%s' with output format '%s' is not supported. Please implement a custom workload profile to support it", workloadProfileName, outputFormat)
 			}
 
 			if workloadManifest, err := convert.Workload(localProfiles[profileIndex], currentState, workloadName, location, projectId); err != nil {
@@ -260,5 +266,6 @@ func init() {
 	generateCmd.Flags().StringP(generateCmdImageFlag, "i", "", "An optional container image to use for any container with image == '.'")
 	generateCmd.Flags().StringP(generateCmdLocationFlag, "l", "", "The Google Cloud Location to deploy to")
 	generateCmd.Flags().StringP(generateCmdProjectIdFlag, "p", "", "The Google Cloud Project ID to deploy to")
+	generateCmd.Flags().StringP(generateCmdOutputFormatFlag, "", "terraform", "The format of the output manifests file. Associated workload profile and provisioners will be used based on this output format")
 	rootCmd.AddCommand(generateCmd)
 }

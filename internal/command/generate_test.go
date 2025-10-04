@@ -221,6 +221,7 @@ resources:
 - uri: default://something
   type: something
   class: default
+  format: terraform
 `), 0644))
 
 	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{

@@ -14,7 +14,8 @@ Run the conversion from Score file to output manifests.
 
 - `--image`|`-i` - An optional container image to use for any container with image == '.'.
 - `--location`|`-l` - The Google Cloud Location to deploy to.
-- `--output`|`-o` - The output manifests file to write the manifests to (default "manifests.tf").
+- `--output`|`-o` - The output manifests file to write the manifests to (default `manifests.tf`).
+- `--output-format` - The output format of the manifests files to write the manifests to (default `terraform`).
 - `--override-property` - An optional set of path=key overrides to set or remove.
 - `--overrides-file` - `An optional file of Score overrides to merge in.
 - `--project-id`|`-p` - The Google Cloud Project ID to deploy to.

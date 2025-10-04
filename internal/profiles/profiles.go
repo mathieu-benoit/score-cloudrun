@@ -45,7 +45,7 @@ func GetDefaultProfileContent() string {
 }
 
 // LoadProfilesFromDirectory loads all workload profiles we can find in files that end in the common suffix.
-func LoadProfilesFromDirectory(path string) ([]Profile, error) {
+func LoadProfilesFromDirectory(path string, outputFormat string) ([]Profile, error) {
 	slog.Debug(fmt.Sprintf("Loading profiles with suffix %s in directory '%s'", ProfilesFileSuffix, path))
 	items, err := os.ReadDir(path)
 	if err != nil {
@@ -58,7 +58,7 @@ func LoadProfilesFromDirectory(path string) ([]Profile, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to read '%s': %w", item.Name(), err)
 			}
-			p, err := LoadProfiles(raw)
+			p, err := LoadProfiles(raw, outputFormat)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load '%s': %w", item.Name(), err)
 			}
@@ -69,7 +69,7 @@ func LoadProfilesFromDirectory(path string) ([]Profile, error) {
 }
 
 // LoadProfiles loads a list of provisioners from the raw contents from a yaml file.
-func LoadProfiles(raw []byte) ([]Profile, error) {
+func LoadProfiles(raw []byte, outputFormat string) ([]Profile, error) {
 	var intermediate []map[string]interface{}
 	if err := yaml.NewDecoder(bytes.NewReader(raw)).Decode(&intermediate); err != nil {
 		return nil, fmt.Errorf("failed to decode file: %w", err)
@@ -88,8 +88,10 @@ func LoadProfiles(raw []byte) ([]Profile, error) {
 			return nil, fmt.Errorf("id not set")
 		}
 
-		slog.Debug(fmt.Sprintf("Loaded profile %s", profile.Id))
-		out = append(out, profile)
+		if outputFormat == "" || outputFormat == profile.Format {
+			slog.Debug(fmt.Sprintf("Loaded profile %s", profile.Id))
+			out = append(out, profile)
+		}
 	}
 	return out, nil
 }
