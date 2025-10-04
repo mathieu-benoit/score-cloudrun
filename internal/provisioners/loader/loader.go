@@ -36,20 +36,20 @@ import (
 const ProvisionersFileSuffix = ".provisioners.yaml"
 
 // LoadProvisionersFromDirectory loads all provisioners we can find in files that end in the common suffix.
-func LoadProvisionersFromDirectory(path string, suffix string) ([]provisioners.Provisioner, error) {
-	slog.Debug(fmt.Sprintf("Loading provisioners with suffix %s in directory '%s'", suffix, path))
+func LoadProvisionersFromDirectory(path string, filesSuffix string, outputFormat string) ([]provisioners.Provisioner, error) {
+	slog.Debug(fmt.Sprintf("Loading provisioners with suffix %s in directory '%s'", filesSuffix, path))
 	items, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]provisioners.Provisioner, 0)
 	for _, item := range items {
-		if !item.IsDir() && strings.HasSuffix(item.Name(), suffix) {
+		if !item.IsDir() && strings.HasSuffix(item.Name(), filesSuffix) {
 			raw, err := os.ReadFile(filepath.Join(path, item.Name()))
 			if err != nil {
 				return nil, fmt.Errorf("failed to read '%s': %w", item.Name(), err)
 			}
-			p, err := LoadProvisioners(raw)
+			p, err := LoadProvisioners(raw, outputFormat)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load '%s': %w", item.Name(), err)
 			}
@@ -60,7 +60,7 @@ func LoadProvisionersFromDirectory(path string, suffix string) ([]provisioners.P
 }
 
 // LoadProvisioners loads a list of provisioners from the raw contents from a yaml file.
-func LoadProvisioners(raw []byte) ([]provisioners.Provisioner, error) {
+func LoadProvisioners(raw []byte, outputFormat string) ([]provisioners.Provisioner, error) {
 	var intermediate []map[string]interface{}
 	if err := yaml.NewDecoder(bytes.NewReader(raw)).Decode(&intermediate); err != nil {
 		return nil, fmt.Errorf("failed to decode file: %w", err)
@@ -85,8 +85,10 @@ func LoadProvisioners(raw []byte) ([]provisioners.Provisioner, error) {
 			return nil, fmt.Errorf("type not set")
 		}
 
-		slog.Debug(fmt.Sprintf("Loaded provisioner %s", provisioner.Uri))
-		out = append(out, provisioner)
+		if outputFormat == "" || outputFormat == provisioner.Format {
+			slog.Debug(fmt.Sprintf("Loaded provisioner %s", provisioner.Uri))
+			out = append(out, provisioner)
+		}
 	}
 	return out, nil
 }
@@ -95,7 +97,7 @@ func LoadProvisioners(raw []byte) ([]provisioners.Provisioner, error) {
 // in the path directory.
 func SaveProvisionerToDirectory(path string, provisionerUrl string, data []byte) error {
 	// First validate whether this file contains valid provisioner data.
-	if _, err := LoadProvisioners(data); err != nil {
+	if _, err := LoadProvisioners(data, ""); err != nil {
 		return fmt.Errorf("invalid provisioners file: %w", err)
 	}
 	// Append a heading indicating the source and time

@@ -40,7 +40,7 @@ type Provisioner struct {
 	Outputs map[string]interface{} `yaml:"outputs,omitempty"`
 }
 
-func ProvisionResources(currentState *state.State, provisioners []Provisioner, location string, projectId string) (string, *state.State, error) {
+func ProvisionResources(currentState *state.State, provisioners []Provisioner, outputFormat string, location string, projectId string) (string, *state.State, error) {
 	out := currentState
 	manifests := ""
 
@@ -55,10 +55,10 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, l
 		resState := out.Resources[resUid]
 
 		provisionerIndex := slices.IndexFunc(provisioners, func(provisioner Provisioner) bool {
-			return provisioner.ResType == resUid.Type() && provisioner.Class == resUid.Class()
+			return provisioner.ResType == resUid.Type() && provisioner.Class == resUid.Class() && provisioner.Format == outputFormat
 		})
 		if provisionerIndex < 0 {
-			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. Please implement a custom resource provisioner to support this resource type '%s' with class '%s'", resUid, resUid.Type(), resUid.Class())
+			return "", nil, fmt.Errorf("resource '%s' is not supported by any provisioner. Please implement a custom resource provisioner to support this resource type '%s' with class '%s' for the output format '%s'", resUid, resUid.Type(), resUid.Class(), outputFormat)
 		}
 
 		var params map[string]interface{}
