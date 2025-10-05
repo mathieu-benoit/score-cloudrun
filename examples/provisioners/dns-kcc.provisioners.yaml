@@ -1,0 +1,7 @@
+- uri: default-kcc://default-provisioners/default-dns
+  type: dns
+  class: default
+  format: kcc
+  description: Uses the default Cloud Run Service endpoint
+  outputs:
+    host: fixme

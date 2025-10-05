@@ -1,0 +1,9 @@
+- uri: default-kcc://default-provisioners/route
+  type: route
+  class: default
+  format: kcc
+  description: Defines an empty route
+  inputs:
+    - host
+    - path
+    - port
