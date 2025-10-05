@@ -1,0 +1,23 @@
+- uri: default-kcc://default-provisioners/memorystore-redis
+  type: redis
+  class: default
+  format: kcc
+  description: Generates a Memorystore (Redis) Config Connector resource
+  outputs:
+    host: fixme
+    port: fixme
+    username: ""
+    password: fixme
+  manifests: |
+    ---
+    apiVersion: redis.cnrm.cloud.google.com/v1beta1
+    kind: RedisInstance
+    metadata:
+      name: redis-fixme
+    spec:
+      redisVersion: REDIS_7_2
+      region: {{ .Location }}
+      tier: BASIC
+      memorySizeGb: 16
+      authEnabled: true
+      authorizedNetwork: default

@@ -8,3 +8,4 @@ main.tf
 .terraform.lock.hcl
 .score-compose/
 compose.yaml
+manifests.yaml
