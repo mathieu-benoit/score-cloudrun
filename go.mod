@@ -2,7 +2,7 @@ module github.com/score-spec/score-cloudrun
 
 go 1.25
 
-toolchain go1.25.1
+toolchain go1.25.3
 
 require (
 	dario.cat/mergo v1.0.2
@@ -14,7 +14,8 @@ require (
 )
 
 require (
-	github.com/clipperhouse/uax29/v2 v2.2.0 // indirect
+	github.com/clipperhouse/stringish v0.1.1 // indirect
+	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
