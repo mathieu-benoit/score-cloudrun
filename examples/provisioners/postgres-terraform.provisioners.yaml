@@ -37,7 +37,7 @@
     }
 
     resource "google_sql_database" "database" {
-      project          = "{{ .ProjectId }}"
+      project  = "{{ .ProjectId }}"
       name     = "db-${random_string.postgres_database_name.result}"
       instance = google_sql_database_instance.instance.name
       deletion_policy = "ABANDON"
@@ -49,7 +49,7 @@
     }
 
     resource "google_sql_user" "user" {
-      project          = "{{ .ProjectId }}"
+      project  = "{{ .ProjectId }}"
       instance = google_sql_database_instance.instance.name
       name     = "user-${random_string.postgres_database_name.result}"
       password = random_password.password.result

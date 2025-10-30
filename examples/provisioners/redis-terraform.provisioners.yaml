@@ -6,8 +6,8 @@
   outputs:
     host: ${google_redis_instance.memorystore.host}
     port: ${google_redis_instance.memorystore.port}
-    username: ""
-    password: "${google_redis_instance.memorystore.auth_string}"
+    username: ${data.google_secret_manager_secret_version.memorystore_username.secret_data}
+    password: ${data.google_secret_manager_secret_version.memorystore_password.secret_data}
   manifests: |
     resource "random_string" "memorystore_instance_name" {
       length  = 10
@@ -24,4 +24,50 @@
       region             = "{{ .Location }}"
       auth_enabled       = true
       authorized_network = local.network
+    }
+
+    resource "google_secret_manager_secret" "memorystore_password" {
+      secret_id = "${google_redis_instance.memorystore.name}-password"
+      replication {
+        auto {}
+      }
+      depends_on = [google_project_service.secretmanager]
+    }
+
+    resource "google_secret_manager_secret_version" "memorystore_password" {
+      secret      = google_secret_manager_secret.memorystore_password.id
+      secret_data = google_redis_instance.memorystore.auth_string
+    }
+
+    data "google_secret_manager_secret_version" "memorystore_password" {
+      secret = google_secret_manager_secret.memorystore_password.id
+    }
+
+    resource "google_secret_manager_secret_iam_member" "memorystore_password" {
+      secret_id = google_secret_manager_secret.memorystore_password.id
+      role      = "roles/secretmanager.secretAccessor"
+      member    = google_service_account.{{ .SourceWorkload }}.email
+    }
+
+    resource "google_secret_manager_secret" "memorystore_username" {
+      secret_id = "${google_redis_instance.memorystore.name}-username"
+      replication {
+        auto {}
+      }
+      depends_on = [google_project_service.secretmanager]
+    }
+
+    resource "google_secret_manager_secret_version" "memorystore_username" {
+      secret      = google_secret_manager_secret.memorystore_username.id
+      secret_data = ""
+    }
+
+    data "google_secret_manager_secret_version" "memorystore_username" {
+      secret = google_secret_manager_secret.memorystore_username.id
+    }
+
+    resource "google_secret_manager_secret_iam_member" "memorystore_username" {
+      secret_id = google_secret_manager_secret.memorystore_username.id
+      role      = "roles/secretmanager.secretAccessor"
+      member    = google_service_account.{{ .SourceWorkload }}.email
     }

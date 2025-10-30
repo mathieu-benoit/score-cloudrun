@@ -39,6 +39,7 @@ Let's start!
 make build
 alias score-cloudrun=./score-cloudrun
 
+rm -rf .score-compose
 rm -rf .score-cloudrun
 score-cloudrun init
 
@@ -83,7 +84,7 @@ google_cloud_run_v2_service
 google_service_account
 ```
 
-## As Dev, I want to know what resource dependencies I can use alongside my workload
+## As Dev, I want to know what workload profiles and resource dependencies I can use alongside my workload
 
 ```bash
 score-cloudrun provisioners list
@@ -105,8 +106,6 @@ score-cloudrun provisioners list
 +----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
 ```
 
-## As Dev, I want to know what type of workload profiles are supported by my platform
-
 ```bash
 score-cloudrun profiles list
 ```
@@ -121,7 +120,9 @@ score-cloudrun profiles list
 +---------+-----------+---------------------------------------------------------------------------+
 ```
 
-## As Dev, I now want to use a Redis database
+![](./images/score-cloudrun.png)
+
+## As Dev, I want to use a Redis database
 
 ```yaml
 apiVersion: score.dev/v1b1

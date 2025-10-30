@@ -3,6 +3,11 @@
   format: terraform
   description: Defines the default Workload profile as Cloud Run Service with Terraform.
   manifests: |
+    resource "google_project_service" "secretmanager" {
+      project = "{{ .ProjectId }}"
+      service = "secretmanager.googleapis.com"
+    }
+    
     {{- $workloadName := .WorkloadName }}{{- $exposedRouteEnabled := false }}
     locals {
       network = "default"
