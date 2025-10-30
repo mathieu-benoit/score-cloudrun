@@ -1,5 +1,11 @@
 # `score-cloudrun`
 
+TODO:
+- GSM
+- `--source`
+- knative profile
+- WorkloadPool?
+
 `score-cloudrun` is a Score implementation of the [Score specification](https://score.dev/) for [Google Cloud Run](https://cloud.google.com/run).
 
 ## Why `score-cloudrun`?
@@ -8,7 +14,7 @@ The promise of Score (CNCF Sandbox) is:
 
 > Score is loved by developers because they can deploy the same workload on completely different platforms, without being an expert in any of them.
 
-![](score.png)
+![](./docs/images/score.png)
 
 On the other hand, Cloud Run is a very [appealing managed Platform to run containers](https://www.linkedin.com/pulse/cloud-run-power-kubernetes-simplicity-serverless-julien-breux-eq30f):
 
@@ -19,7 +25,7 @@ Here are some key features of `score-cloudrun`, bringing the advantages of both,
 2. Implementation details made by the PEs, abstracting from the Devs, allowing more standardization too;
 3. Seamless combination with `score-compose` to boost the Devs's inner-loop productivity and save costs.
 
-![](score-cloudrun.png)
+![](./docs/images/score-cloudrun.png)
 
 ## Usage
 

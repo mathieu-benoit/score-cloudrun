@@ -1,28 +1,49 @@
 # `score-cloudrun` Demo!
 
-![](score-cloudrun.png)
+## Context
+
+Today's workflows:
+- Devs deploy Cloud Run app via:
+  1. `gcloud run deploy [--source]`
+  2. UI
+  3. YAML
+  4. Terraform
+- Ops (or Devs) deploy infrastructure dependencies via:
+  - Terraform
+  - UI
+  - `gcloud`
+  - KCC
+  - Pulumi
+
+Problems statements:
+- Asking Devs to do Terraform is a reality but not the best experience, especially when they are comfortable to do `gcloud run deploy` or `git commit` from their local machine
+- Frictions and delays are generated to inject and bind infrastructure to Cloud Run app (TicketOps, ClickOps, Shadow IT)
+- Disconnection between the inner-loop (local) and the outer-loop (CD)
+
+Objectives:
+- Simplify applications development and deployment
+- Improve productivity while staying compliant and secure
+
+Example by [Shopify with their own custom `prod-kit` tool](https://youtu.be/aqjg1QRVed8):
+> robust toolkit that empowers developers to seamlessly ship serverless applications while integrating with essential Google Cloud services and adhering to security best practices. Discover how to enhance scalability, reduce toil, and boost productivity.
 
 Objectives:
 - As Developer, I use the Score specification as a contract in order to describe what I need to deploy my workloads.
 - As Platform Engineer, I author the Terraform manifests that will be used by `score-cloudrun` to centralize and standardize how the workloads and their infrastructure dependencies will actually be deployed in Cloud Run and associated Google Cloud services.
 
-TOC:
-- [As Dev, I define a very basic workload](#as-dev-i-define-a-very-basic-workload)
-- [As Dev, I want to know what resource dependencies I can use alongside my workload](#as-dev-i-want-to-know-what-resource-dependencies-i-can-use-alongside-my-workload)
-- [As Dev, I want to know what type of workload profiles are supported by my platform](#as-dev-i-want-to-know-what-type-of-workload-profiles-are-supported-by-my-platform)
-- [As Dev, I now want to use a Redis database](#as-dev-i-now-want-to-use-a-redis-database)
-- [As Dev, I now want to use a PostgreSQL database](#as-dev-i-now-want-to-use-a-postgresql-database)
-- [As Dev, I now want to expose my workload via a DNS](#as-dev-i-now-want-to-expose-my-workload-via-a-dns)
-- [As Dev, I now want to test my workload and dependencies locally](#as-dev-i-now-want-to-test-my-workload-and-dependencies-locally)
-- [What's coming next](#whats-coming-next)
+![](./images/score-cloudrun-flow.png)
+
+Let's start!
 
 ```bash
 make build
 alias score-cloudrun=./score-cloudrun
 
+rm -rf .score-cloudrun
 score-cloudrun init
 
-cp examples/provisioners/* .score-cloudrun
+cp examples/provisioners/*-terraform.* .score-cloudrun
+cp examples/profiles/*-terraform.* .score-cloudrun
 ```
 
 ## As Dev, I define a very basic workload
@@ -42,8 +63,8 @@ containers:
 The associated Cloud Run resources in Terraform can be generated:
 ```bash
 score-cloudrun generate examples/score/score-basic.yaml \
-    --location FIXME \
-    --project-id FIXME \
+    --location northamerica-northeast1 \
+    --project-id my-project-123 \
     --image ghcr.io/stefanprodan/podinfo:latest \
     -o main.tf
 ```
@@ -69,19 +90,19 @@ score-cloudrun provisioners list
 ```
 
 ```none
-+----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-|   TYPE   |  CLASS   |      INPUTS      |                 OUTPUTS                  |                                 DESCRIPTION                                 |
-+----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| dns      | external |                  | host                                     | Makes the Cloud Run Service publicly available                              |
-+----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| dns      | default  |                  | host                                     | Uses the default Cloud Run Service endpoint                                 |
-+----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| postgres | default  |                  | database, host, password, port, username | Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource |
-+----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| redis    | default  |                  | host, password, port, username           | Generates a Memorystore (Redis) Terraform resource                          |
-+----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
-| route    | default  | host, path, port |                                          | Defines an empty route                                                      |
-+----------+----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
++----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+|   TYPE   |  CLASS   |  FORMAT   |      INPUTS      |                 OUTPUTS                  |                                 DESCRIPTION                                 |
++----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| dns      | external | terraform |                  | host                                     | Makes the Cloud Run Service publicly available                              |
++----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| dns      | default  | terraform |                  | host                                     | Uses the default Cloud Run Service endpoint                                 |
++----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| postgres | default  | terraform |                  | database, host, password, port, username | Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource |
++----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| redis    | default  | terraform |                  | port, username, host, password           | Generates a Memorystore (Redis) Terraform resource                          |
++----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
+| route    | default  | terraform | host, path, port |                                          | Defines an empty route                                                      |
++----------+----------+-----------+------------------+------------------------------------------+-----------------------------------------------------------------------------+
 ```
 
 ## As Dev, I want to know what type of workload profiles are supported by my platform
@@ -124,8 +145,8 @@ resources:
 The associated Cloud Run and dependencies resources in Terraform can be generated:
 ```bash
 score-cloudrun generate examples/score/score-redis.yaml \
-    --location FIXME \
-    --project-id FIXME \
+    --location northamerica-northeast1 \
+    --project-id my-project-123 \
     --image ghcr.io/stefanprodan/podinfo:latest \
     -o main.tf
 ```
@@ -176,8 +197,8 @@ resources:
 The associated Cloud Run and dependencies resources in Terraform can be generated:
 ```bash
 score-cloudrun generate examples/score/score-redis-and-postgres.yaml \
-    --location FIXME \
-    --project-id FIXME \
+    --location northamerica-northeast1 \
+    --project-id my-project-123 \
     --image ghcr.io/stefanprodan/podinfo:latest \
     -o main.tf
 ```
@@ -244,8 +265,8 @@ resources:
 The associated Cloud Run and dependencies resources in Terraform can be generated:
 ```bash
 score-cloudrun generate examples/score/score-redis-and-postgres-and-dns.yaml \
-    --location FIXME \
-    --project-id FIXME \
+    --location northamerica-northeast1 \
+    --project-id my-project-123 \
     --image ghcr.io/stefanprodan/podinfo:latest \
     -o main.tf
 ```
@@ -282,7 +303,7 @@ score-compose generate examples/score/score-redis-and-postgres-and-dns.yaml \
 
 And deploy them:
 ```bash
-docker compose up --build -d --remove-orphans
+docker compose up --build -d --wait --remove-orphans
 ```
 
 ```none
@@ -298,6 +319,7 @@ ae3c395e038b   mirror.gcr.io/postgres:17-alpine      "docker-entrypoint.s…"   
 - `score-cloudrun generate --source`
 - `score-cloudrun generate --output-format terraform|config-connector|knative`
 - `score-cloudrun init --profiles` and `score-cloudrun init --provisioners`
+- Not just inline, but from file for `manifest` in provisioner
 - More features like Volumes, Traffic, etc.
 - Officially releasing this at KubeCon NA 2025 Atlanta
 - We need your feedback!

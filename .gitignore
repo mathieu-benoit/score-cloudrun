@@ -9,3 +9,4 @@ main.tf
 .score-compose/
 compose.yaml
 manifests.yaml
+main.yaml
