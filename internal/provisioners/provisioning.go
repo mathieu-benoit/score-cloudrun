@@ -99,7 +99,7 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, o
 	return manifests, out, nil
 }
 
-func generateResourceManifest(resourceTypeTemplate string, sourceWorkload string, location string, projectId string) (string, error) {
+func generateResourceManifest(resourceTypeTemplate string, workloadName string, location string, projectId string) (string, error) {
 	t, err := template.New("template").Parse(resourceTypeTemplate)
 	if err != nil {
 		return "", err
@@ -108,13 +108,13 @@ func generateResourceManifest(resourceTypeTemplate string, sourceWorkload string
 	var buf bytes.Buffer
 
 	data := struct {
-		SourceWorkload string
-		Location       string
-		ProjectId      string
+		WorkloadName string
+		Location     string
+		ProjectId    string
 	}{
-		SourceWorkload: sourceWorkload,
-		Location:       location,
-		ProjectId:      projectId,
+		WorkloadName: workloadName,
+		Location:     location,
+		ProjectId:    projectId,
 	}
 
 	if err := t.Execute(&buf, data); err != nil {

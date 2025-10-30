@@ -46,7 +46,7 @@
     resource "google_secret_manager_secret_iam_member" "memorystore_password" {
       secret_id = google_secret_manager_secret.memorystore_password.id
       role      = "roles/secretmanager.secretAccessor"
-      member    = google_service_account.{{ .SourceWorkload }}.email
+      member    = google_service_account.{{ .WorkloadName }}.email
     }
 
     resource "google_secret_manager_secret" "memorystore_username" {
@@ -69,5 +69,5 @@
     resource "google_secret_manager_secret_iam_member" "memorystore_username" {
       secret_id = google_secret_manager_secret.memorystore_username.id
       role      = "roles/secretmanager.secretAccessor"
-      member    = google_service_account.{{ .SourceWorkload }}.email
+      member    = google_service_account.{{ .WorkloadName }}.email
     }
