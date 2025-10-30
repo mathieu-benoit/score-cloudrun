@@ -1,10 +1,13 @@
 ## Workload Profiles
 
 ```yaml
-- id: FIXME
-  name: FIXME
+- uri: FIXME
+  type: FIXME
+  class: FIXME
   format: FIXME
-  description: FIXME.
+  description: FIXME
+  outputs:
+    FIXME: FIXME
   manifests: |
     FIXME
 ```
