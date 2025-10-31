@@ -29,7 +29,7 @@ import (
 	"github.com/score-spec/score-cloudrun/internal/state"
 )
 
-func Workload(workloadProfile profiles.Profile, currentState *state.State, workloadName string, location string, projectId string) (string, error) {
+func Workload(workloadProfile profiles.Profile, currentState *state.State, workloadName string, location string, projectId string, image string, sourcePath string, baseImage string, functionName string) (string, error) {
 	resOutputs, err := currentState.GetResourceOutputForWorkload(workloadName)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate outputs: %w", err)
@@ -61,7 +61,7 @@ func Workload(workloadProfile profiles.Profile, currentState *state.State, workl
 	}
 	spec.Resources = resources
 
-	convertedWorkloadManifests, err := convertWithWorkloadProfile(workloadProfile, spec, workloadName, location, projectId)
+	convertedWorkloadManifests, err := convertWithWorkloadProfile(workloadProfile, spec, workloadName, location, projectId, image, sourcePath, baseImage, functionName)
 	if err != nil {
 		return "", fmt.Errorf("workload: %s: failed to convert to Terraform: %w", workloadName, err)
 	}
@@ -70,8 +70,8 @@ func Workload(workloadProfile profiles.Profile, currentState *state.State, workl
 }
 
 // convertWithWorkloadProfile converts the Score workload with the associated Workload Profile
-func convertWithWorkloadProfile(profile profiles.Profile, spec scoretypes.Workload, workloadName string, location string, projectId string) (string, error) {
-	fileContent, err := generateWorkloadManifests(profile, spec, workloadName, location, projectId)
+func convertWithWorkloadProfile(profile profiles.Profile, spec scoretypes.Workload, workloadName string, location string, projectId string, image string, sourcePath string, baseImage string, functionName string) (string, error) {
+	fileContent, err := generateWorkloadManifests(profile, spec, workloadName, location, projectId, image, sourcePath, baseImage, functionName)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate cloud run service: %w", err)
 	}
@@ -79,7 +79,22 @@ func convertWithWorkloadProfile(profile profiles.Profile, spec scoretypes.Worklo
 	return fileContent, nil
 }
 
-func generateWorkloadManifests(profile profiles.Profile, spec scoretypes.Workload, workloadName string, location string, projectId string) (string, error) {
+type BuildConfig struct {
+	SourcePath   string
+	BaseImage    string
+	FunctionName string
+}
+
+type WorkloadConfig struct {
+	WorkloadName string
+	Spec         scoretypes.Workload
+	Location     string
+	ProjectId    string
+	Image        string
+	BuildConfig  BuildConfig
+}
+
+func generateWorkloadManifests(profile profiles.Profile, spec scoretypes.Workload, workloadName string, location string, projectId string, image string, sourcePath string, baseImage string, functionName string) (string, error) {
 	t, err := template.New("template").Parse(profile.ManifestsTemplate)
 	if err != nil {
 		return "", err
@@ -87,16 +102,17 @@ func generateWorkloadManifests(profile profiles.Profile, spec scoretypes.Workloa
 	// Create a buffer to hold the generated cloud run service
 	var buf bytes.Buffer
 
-	data := struct {
-		WorkloadName string
-		Spec         scoretypes.Workload
-		Location     string
-		ProjectId    string
-	}{
+	data := WorkloadConfig{
 		WorkloadName: workloadName,
 		Spec:         spec,
 		Location:     location,
 		ProjectId:    projectId,
+		Image:        image,
+		BuildConfig: BuildConfig{
+			SourcePath:   sourcePath,
+			BaseImage:    baseImage,
+			FunctionName: functionName,
+		},
 	}
 
 	if err := t.Execute(&buf, data); err != nil {

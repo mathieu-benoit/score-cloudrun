@@ -36,15 +36,7 @@ Objectives:
 Let's start!
 
 ```bash
-make build
 alias score-cloudrun=./score-cloudrun
-
-rm -rf .score-compose
-rm -rf .score-cloudrun
-score-cloudrun init
-
-cp examples/provisioners/*-terraform.* .score-cloudrun
-cp examples/profiles/*-terraform.* .score-cloudrun
 ```
 
 ## As Dev, I define a very basic workload
@@ -165,6 +157,9 @@ terrraform apply out.tfplan
 google_cloud_run_v2_service
 google_service_account
 google_redis_instance
+google_secret_manager_secret
+google_secret_manager_secret_version
+google_secret_manager_secret_iam_member
 ```
 
 ## As Dev, I now want to use a PostgreSQL database
@@ -220,6 +215,9 @@ google_sql_database_instance
 google_sql_database
 google_sql_user
 google_redis_instance
+google_secret_manager_secret
+google_secret_manager_secret_version
+google_secret_manager_secret_iam_member
 ```
 
 ## As Dev, I now want to expose my workload via a DNS
@@ -289,6 +287,9 @@ google_sql_database_instance
 google_sql_database
 google_sql_user
 google_redis_instance
+google_secret_manager_secret
+google_secret_manager_secret_version
+google_secret_manager_secret_iam_member
 ```
 
 ## As Dev, I now want to test my workload and dependencies locally
@@ -317,10 +318,26 @@ ae3c395e038b   mirror.gcr.io/postgres:17-alpine      "docker-entrypoint.s…"   
 
 ## What's coming next
 
-- `score-cloudrun generate --source`
-- `score-cloudrun generate --output-format terraform|config-connector|knative`
-- `score-cloudrun init --profiles` and `score-cloudrun init --provisioners`
-- Not just inline, but from file for `manifest` in provisioner
 - More features like Volumes, Traffic, etc.
 - Officially releasing this at KubeCon NA 2025 Atlanta
 - We need your feedback!
+
+## Function (`--source`)
+
+The associated Cloud Run and dependencies resources in Terraform can be generated:
+```bash
+score-cloudrun generate examples/score/score-source.yaml \
+    --location northamerica-northeast1 \
+    --project-id my-project-123 \
+    --image us-central1-docker.pkg.dev/my-repo/my-image \
+    --source examples/app/index.js \
+    -o main.tf
+```
+
+## Knative
+
+FIXME
+
+## KCC
+
+FIXME

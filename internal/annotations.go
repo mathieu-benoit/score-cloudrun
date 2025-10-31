@@ -19,8 +19,10 @@ import (
 )
 
 const (
-	AnnotationPrefix          = "cloudrun.score.dev/"
-	WorkloadProfileAnnotation = AnnotationPrefix + "workload-profile"
+	AnnotationPrefix                  = "cloudrun.score.dev/"
+	WorkloadProfileAnnotation         = AnnotationPrefix + "workload-profile"
+	BuildConfigBaseImageAnnotation    = AnnotationPrefix + "base-image"
+	BuildConfigFunctionNameAnnotation = AnnotationPrefix + "function-name"
 )
 
 func ListAnnotations(metadata map[string]interface{}) []string {

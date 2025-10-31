@@ -1,11 +1,5 @@
 # `score-cloudrun`
 
-TODO:
-- `--source`
-- knative profile
-- WorkloadPool?
-- Functions?
-
 `score-cloudrun` is a Score implementation of the [Score specification](https://score.dev/) for [Google Cloud Run](https://cloud.google.com/run).
 
 ## Why `score-cloudrun`?

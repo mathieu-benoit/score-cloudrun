@@ -17,6 +17,13 @@ lint:
 build:
 	go build ./cmd/score-cloudrun/
 
+init-demo: build
+	rm -rf .score-compose
+	rm -rf .score-cloudrun
+	./score-cloudrun init
+	cp examples/provisioners/*-terraform.* .score-cloudrun
+	cp examples/profiles/*-terraform.* .score-cloudrun
+
 test:
 	go vet ./...
 	go test -v ./...

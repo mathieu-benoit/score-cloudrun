@@ -42,6 +42,7 @@ const (
 	generateCmdOverridesFileFlag    = "overrides-file"
 	generateCmdOverridePropertyFlag = "override-property"
 	generateCmdImageFlag            = "image"
+	generateCmdSourceFlag           = "source"
 	generateCmdOutputFlag           = "output"
 	generateCmdLocationFlag         = "location"
 	generateCmdProjectIdFlag        = "project-id"
@@ -70,6 +71,8 @@ var generateCmd = &cobra.Command{
 		if len(args) != 1 && (cmd.Flags().Lookup(generateCmdOverridesFileFlag).Changed || cmd.Flags().Lookup(generateCmdOverridePropertyFlag).Changed || cmd.Flags().Lookup(generateCmdImageFlag).Changed) {
 			return fmt.Errorf("cannot use --%s, --%s, or --%s when 0 or more than 1 score files are provided", generateCmdOverridePropertyFlag, generateCmdOverridesFileFlag, generateCmdImageFlag)
 		}
+
+		image, _ := cmd.Flags().GetString(generateCmdImageFlag)
 
 		slices.Sort(args)
 		for _, arg := range args {
@@ -115,12 +118,12 @@ var generateCmd = &cobra.Command{
 			// Apply image override
 			for containerName, container := range workload.Containers {
 				if container.Image == "." {
-					if v, _ := cmd.Flags().GetString(generateCmdImageFlag); v != "" {
-						container.Image = v
-						slog.Info(fmt.Sprintf("Set container image for container '%s' to %s from --%s", containerName, v, generateCmdImageFlag))
+					if image != "" {
+						container.Image = image
+						slog.Info(fmt.Sprintf("Set container image for container '%s' to %s from --%s", containerName, image, generateCmdImageFlag))
 						workload.Containers[containerName] = container
 					} else {
-						return fmt.Errorf("failed to convert '%s' because container '%s' has no image and --image was not provided: %w", arg, containerName, err)
+						return fmt.Errorf("failed to convert '%s' because container '%s' has no image and --%s was not provided", arg, containerName, generateCmdImageFlag)
 					}
 				}
 			}
@@ -147,6 +150,8 @@ var generateCmd = &cobra.Command{
 		if projectId == "" {
 			return fmt.Errorf("no Google Cloud Project ID specified, please use --%s", generateCmdProjectIdFlag)
 		}
+
+		sourcePath, _ := cmd.Flags().GetString(generateCmdSourceFlag)
 
 		slog.Info("Primed resources", "#workloads", len(currentState.Workloads), "#resources", len(currentState.Resources))
 
@@ -191,7 +196,13 @@ var generateCmd = &cobra.Command{
 				return fmt.Errorf("workload profile '%s' with output format '%s' is not supported. Please implement a custom workload profile to support it", workloadProfileName, outputFormat)
 			}
 
-			if workloadManifest, err := convert.Workload(localProfiles[profileIndex], currentState, workloadName, location, projectId); err != nil {
+			baseImage, found := annotations.FindAnnotation(currentState.Workloads[workloadName].Spec.Metadata, annotations.BuildConfigBaseImageAnnotation)
+			if !found && sourcePath != "" {
+				return fmt.Errorf("annotation '%s' in the Score file needs to be set when using --%s", annotations.BuildConfigBaseImageAnnotation, generateCmdSourceFlag)
+			}
+			functionName, _ := annotations.FindAnnotation(currentState.Workloads[workloadName].Spec.Metadata, annotations.BuildConfigFunctionNameAnnotation)
+
+			if workloadManifest, err := convert.Workload(localProfiles[profileIndex], currentState, workloadName, location, projectId, image, sourcePath, baseImage, functionName); err != nil {
 				return fmt.Errorf("failed to convert workloads: %w", err)
 			} else {
 				out.WriteString(workloadManifest)
@@ -264,6 +275,7 @@ func init() {
 	generateCmd.Flags().String(generateCmdOverridesFileFlag, "", "An optional file of Score overrides to merge in")
 	generateCmd.Flags().StringArray(generateCmdOverridePropertyFlag, []string{}, "An optional set of path=key overrides to set or remove")
 	generateCmd.Flags().StringP(generateCmdImageFlag, "i", "", "An optional container image to use for any container with image == '.'")
+	generateCmd.Flags().StringP(generateCmdSourceFlag, "s", "", "An optional path to the source code to build. Annotations cloudrun.score.dev/base-image (required) and cloudrun.score.dev/function-name (optional) in the Score file can be used")
 	generateCmd.Flags().StringP(generateCmdLocationFlag, "l", "", "The Google Cloud Location to deploy to")
 	generateCmd.Flags().StringP(generateCmdProjectIdFlag, "p", "", "The Google Cloud Project ID to deploy to")
 	generateCmd.Flags().StringP(generateCmdOutputFormatFlag, "", "terraform", "The format of the output manifests file. Associated workload profile and provisioners will be used based on this output format")

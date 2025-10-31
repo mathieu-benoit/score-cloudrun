@@ -7,6 +7,9 @@
       project = "{{ .ProjectId }}"
       service = "secretmanager.googleapis.com"
     }
+
+    data "google_project" "project" {
+    }
     
     {{- $workloadName := .WorkloadName }}{{- $exposedRouteEnabled := false }}
     locals {
@@ -22,6 +25,17 @@
       ingress = "INGRESS_TRAFFIC_ALL"
       {{- if not $exposedRouteEnabled }}
       default_uri_disabled = {{ not $exposedRouteEnabled }}
+      {{- end }}
+
+      {{- if ne .BuildConfig.SourcePath "" }}
+      build_config {
+        source_location = "gs://${google_storage_bucket.{{ $workloadName }}_source.name}/${google_storage_bucket_object.{{ $workloadName }}_source.name}"
+        function_target = "{{ .BuildConfig.FunctionName }}"
+        image_uri = "{{ .Image }}"
+        base_image = "us-central1-docker.pkg.dev/serverless-runtimes/google-22-full/runtimes/{{ .BuildConfig.BaseImage }}"
+        enable_automatic_updates = true
+        service_account = google_service_account.{{ $workloadName }}_build.id
+      }
       {{- end }}
 
       template {
@@ -80,3 +94,29 @@
       project = "{{ .ProjectId }}"
       account_id = "{{ $workloadName }}"
     }
+    
+    {{- if ne .BuildConfig.SourcePath "" }}
+    resource "google_storage_bucket" "{{ $workloadName }}_source" {
+      name     = data.google_project.project.project_id-{{ $workloadName }}-source
+      location = "US"
+      uniform_bucket_level_access = true
+    }
+    resource "google_storage_bucket_object" "{{ $workloadName }}_source" {
+      name   = "{{ .BuildConfig.SourcePath }}"
+      bucket = google_storage_bucket.{{ $workloadName }}_source.name
+      source = "{{ .BuildConfig.SourcePath }}"
+    }
+    resource "google_service_account" "{{ $workloadName }}_build" {
+      account_id = "{{ $workloadName }}_build"
+    }
+    resource "google_project_iam_member" "{{ $workloadName }}_build_act_as" {
+      project = data.google_project.project.project_id
+      role    = "roles/iam.serviceAccountUser"
+      member  = "serviceAccount:${google_service_account.{{ $workloadName }}_build.email}"
+    }
+    resource "google_project_iam_member" "{{ $workloadName }}_build_logs_writer" {
+      project = data.google_project.project.project_id
+      role    = "roles/logging.logWriter"
+      member  = "serviceAccount:${google_service_account.{{ $workloadName }}_build.email}"
+    }
+    {{- end }}

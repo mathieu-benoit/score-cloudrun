@@ -19,8 +19,9 @@ Run the conversion from Score file to output manifests.
 - `--override-property` - An optional set of path=key overrides to set or remove.
 - `--overrides-file` - `An optional file of Score overrides to merge in.
 - `--project-id`|`-p` - The Google Cloud Project ID to deploy to.
+- `--source` | `-s` - An optional path to the source code to build. Annotations `cloudrun.score.dev/base-image` (required) and `cloudrun.score.dev/function-name` (optional) in the Score file can be used.
 
-Note: you can use the `annotation` below in your Score file to select a particular workload profile:
+You can use the `cloudrun.score.dev/workload-profile` `annotation` below in your Score file to select a particular workload profile:
 ```yaml
 apiVersion: score.dev/v1b1
 metadata:
@@ -36,7 +37,7 @@ containers:
 
 ### `list`
 
-The list command will list out the workload profiles. This requires an active score-cloudrun state after `init` has been run. The list of workload profiles will be empty if no profiles are defined.
+The list command will list out the workload profiles. This requires an active `score-cloudrun` state after `init` has been run. The list of workload profiles will be empty if no profiles are defined.
 
 - `--format`|`-f` - Format of the output: `table` (default), `json`.
 

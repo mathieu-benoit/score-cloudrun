@@ -1,0 +1,13 @@
+apiVersion: score.dev/v1b1
+metadata:
+  name: example
+  annotations:
+    cloudrun.score.dev/base-image: "nodejs22"
+containers:
+  main:
+    image: .
+    command:
+      - node
+      - index.js
+    variables:
+      PORT: "8080"
