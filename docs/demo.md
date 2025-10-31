@@ -37,6 +37,7 @@ Let's start!
 
 ```bash
 alias score-cloudrun=./score-cloudrun
+make init-terraform-demo
 ```
 
 ## As Dev, I define a very basic workload
@@ -369,4 +370,62 @@ FIXME
 
 ## KCC
 
-FIXME
+```bash
+make init-kcc-demo
+```
+
+```bash
+score-cloudrun provisioners list
+```
+
+```none
++----------+----------+--------+------------------+------------------------------------------+------------------------------------------------------------------------------------+
+|   TYPE   |  CLASS   | FORMAT |      INPUTS      |                 OUTPUTS                  |                                    DESCRIPTION                                     |
++----------+----------+--------+------------------+------------------------------------------+------------------------------------------------------------------------------------+
+| dns      | external | kcc    |                  | host                                     | Makes the Cloud Run Service publicly available                                     |
++----------+----------+--------+------------------+------------------------------------------+------------------------------------------------------------------------------------+
+| dns      | default  | kcc    |                  | host                                     | Uses the default Cloud Run Service endpoint                                        |
++----------+----------+--------+------------------+------------------------------------------+------------------------------------------------------------------------------------+
+| postgres | default  | kcc    |                  | database, host, password, port, username | Generates a Cloud SQL (PostgreSQL) instance and database Config Connector resource |
++----------+----------+--------+------------------+------------------------------------------+------------------------------------------------------------------------------------+
+| redis    | default  | kcc    |                  | password, port, username, host           | Generates a Memorystore (Redis) Config Connector resource                          |
++----------+----------+--------+------------------+------------------------------------------+------------------------------------------------------------------------------------+
+| route    | default  | kcc    | host, path, port |                                          | Defines an empty route                                                             |
++----------+----------+--------+------------------+------------------------------------------+------------------------------------------------------------------------------------+
+```
+
+```bash
+score-cloudrun profiles list
+```
+
+```none
++---------+--------+----------------------------------------------------------------------------------+
+|  NAME   | FORMAT |                                   DESCRIPTION                                    |
++---------+--------+----------------------------------------------------------------------------------+
+| default | kcc    | Defines the default Workload profile as Cloud Run Service with Config Connector. |
++---------+--------+----------------------------------------------------------------------------------+
+| job     | kcc    | Defines the Workload profile as Cloud Run Job with Config Connector.             |
++---------+--------+----------------------------------------------------------------------------------+
+```
+
+The associated Cloud Run and dependencies resources in Terraform can be generated:
+```bash
+score-cloudrun generate examples/score/score-redis-and-postgres-and-dns.yaml \
+    --output-format kcc \
+    --location northamerica-northeast1 \
+    --project-id my-project-123 \
+    --image ghcr.io/stefanprodan/podinfo:latest \
+    -o main.yaml
+```
+
+```bash
+kubectl apply -f main.yaml
+```
+
+```none
+serviceusage.cnrm.cloud.google.com
+run.cnrm.cloud.google.com
+iam.cnrm.cloud.google.com
+sql.cnrm.cloud.google.com
+redis.cnrm.cloud.google.com
+```

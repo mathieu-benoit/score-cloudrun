@@ -17,12 +17,19 @@ lint:
 build:
 	go build ./cmd/score-cloudrun/
 
-init-demo: build
+init-tf-demo: build
 	rm -rf .score-compose
 	rm -rf .score-cloudrun
 	./score-cloudrun init
 	cp examples/provisioners/*-terraform.* .score-cloudrun
 	cp examples/profiles/*-terraform.* .score-cloudrun
+
+init-kcc-demo: build
+	rm -rf .score-compose
+	rm -rf .score-cloudrun
+	./score-cloudrun init --no-default-profile
+	cp examples/provisioners/*-kcc.* .score-cloudrun
+	cp examples/profiles/*-kcc.* .score-cloudrun
 
 test:
 	go vet ./...
