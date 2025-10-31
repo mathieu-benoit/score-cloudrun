@@ -74,6 +74,7 @@ terrraform apply out.tfplan
 ```none
 google_cloud_run_v2_service
 google_service_account
+google_project_service
 ```
 
 ## As Dev, I want to know what workload profiles and resource dependencies I can use alongside my workload
@@ -156,6 +157,7 @@ terrraform apply out.tfplan
 ```none
 google_cloud_run_v2_service
 google_service_account
+google_project_service
 google_redis_instance
 google_secret_manager_secret
 google_secret_manager_secret_version
@@ -211,6 +213,7 @@ terrraform apply out.tfplan
 ```none
 google_cloud_run_v2_service
 google_service_account
+google_project_service
 google_sql_database_instance
 google_sql_database
 google_sql_user
@@ -282,6 +285,7 @@ terrraform apply out.tfplan
 ```none
 google_cloud_run_v2_service
 google_service_account
+google_project_service
 google_cloud_run_service_iam_policy
 google_sql_database_instance
 google_sql_database
@@ -332,6 +336,31 @@ score-cloudrun generate examples/score/score-source.yaml \
     --image us-central1-docker.pkg.dev/my-repo/my-image \
     --source examples/app/index.js \
     -o main.tf
+```
+
+And deploy them:
+```bash
+terraform init
+
+terrraform plan -out out.tfplan
+
+terrraform apply out.tfplan
+```
+
+```none
+google_cloud_run_v2_service
+google_service_account
+google_project_service
+google_cloud_run_service_iam_policy
+google_sql_database_instance
+google_sql_database
+google_sql_user
+google_redis_instance
+google_secret_manager_secret
+google_secret_manager_secret_version
+google_secret_manager_secret_iam_member
+google_storage_bucket
+google_storage_bucket_object
 ```
 
 ## Knative
