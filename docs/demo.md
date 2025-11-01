@@ -33,7 +33,7 @@ Objectives:
 
 ![](./images/score-cloudrun-flow.png)
 
-Let's start!
+Show me the demos!
 
 ```bash
 alias score-cloudrun=./score-cloudrun
