@@ -17,16 +17,17 @@ package convert
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"maps"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/score-spec/score-go/framework"
 	scoretypes "github.com/score-spec/score-go/types"
 
 	"github.com/score-spec/score-cloudrun/internal/profiles"
 	"github.com/score-spec/score-cloudrun/internal/state"
+	"github.com/score-spec/score-cloudrun/internal/templatefuncs"
 )
 
 func Workload(workloadProfile profiles.Profile, currentState *state.State, workloadName string, location string, projectId string, image string, sourcePath string, baseImage string, functionName string) (string, error) {
@@ -95,7 +96,7 @@ type WorkloadConfig struct {
 }
 
 func generateWorkloadManifests(profile profiles.Profile, spec scoretypes.Workload, workloadName string, location string, projectId string, image string, sourcePath string, baseImage string, functionName string) (string, error) {
-	t, err := template.New("template").Parse(profile.ManifestsTemplate)
+	t, err := template.New("template").Funcs(templatefuncs.FuncMap()).Parse(profile.ManifestsTemplate)
 	if err != nil {
 		return "", err
 	}

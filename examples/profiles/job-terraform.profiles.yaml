@@ -25,19 +25,19 @@
 
           {{- range $containerName, $container := .Spec.Containers }}
           containers {
-            name  = "{{ $containerName }}"
-            image = "{{ $container.Image }}"
+            name  = "{{ hclescape $containerName }}"
+            image = "{{ hclescape $container.Image }}"
             
             {{- range $variableName, $variableValue := $container.Variables }}
             env {
-              name = "{{ $variableName }}"
-              value = "{{ $variableValue }}"
+              name = "{{ hclescape $variableName }}"
+              value = "{{ hclescape $variableValue }}"
             }{{- end }}
 
             {{- if (gt (len $container.Command) 0) }}
             command = [
               {{- range $i, $cmd := $container.Command }}
-              "{{ $cmd }}"{{ if (gt (len $container.Command) $i) }},{{ end }}
+              "{{ hclescape $cmd }}"{{ if (gt (len $container.Command) $i) }},{{ end }}
               {{- end }}
             ]
             {{- end }}
@@ -45,7 +45,7 @@
             {{- if (gt (len $container.Args) 0) }}
             args = [
               {{- range $i, $arg := $container.Args }}
-              "{{ $arg }}"{{ if (gt (len $container.Args) $i) }},{{ end }}
+              "{{ hclescape $arg }}"{{ if (gt (len $container.Args) $i) }},{{ end }}
               {{- end }}
             ]{{- end }}
 
@@ -53,7 +53,7 @@
             liveness_probe {
               http_get {
                 {{- if (ne $container.LivenessProbe.HttpGet.Path "") }}
-                path = "{{ $container.LivenessProbe.HttpGet.Path }}"
+                path = "{{ hclescape $container.LivenessProbe.HttpGet.Path }}"
                 {{- end }}
                 {{- if (ne $container.LivenessProbe.HttpGet.Port 0) }}
                 port = {{ $container.LivenessProbe.HttpGet.Port }}
