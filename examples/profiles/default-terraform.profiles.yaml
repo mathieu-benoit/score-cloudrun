@@ -30,9 +30,9 @@
       {{- if ne .BuildConfig.SourcePath "" }}
       build_config {
         source_location = "gs://${google_storage_bucket.{{ $workloadName }}_source.name}/${google_storage_bucket_object.{{ $workloadName }}_source.name}"
-        function_target = "{{ .BuildConfig.FunctionName }}"
-        image_uri = "{{ .Image }}"
-        base_image = "us-central1-docker.pkg.dev/serverless-runtimes/google-22-full/runtimes/{{ .BuildConfig.BaseImage }}"
+        function_target = "{{ hclescape .BuildConfig.FunctionName }}"
+        image_uri = "{{ hclescape .Image }}"
+        base_image = "us-central1-docker.pkg.dev/serverless-runtimes/google-22-full/runtimes/{{ hclescape .BuildConfig.BaseImage }}"
         enable_automatic_updates = true
         service_account = google_service_account.{{ $workloadName }}_build.id
       }
@@ -43,19 +43,19 @@
 
         {{- range $containerName, $container := .Spec.Containers }}
         containers {
-          name  = "{{ $containerName }}"
-          image = "{{ $container.Image }}"
+          name  = "{{ hclescape $containerName }}"
+          image = "{{ hclescape $container.Image }}"
           
           {{- range $variableName, $variableValue := $container.Variables }}
           env {
-            name = "{{ $variableName }}"
-            value = "{{ $variableValue }}"
+            name = "{{ hclescape $variableName }}"
+            value = "{{ hclescape $variableValue }}"
           }{{- end }}
 
           {{- if (gt (len $container.Command) 0) }}
           command = [
             {{- range $i, $cmd := $container.Command }}
-            "{{ $cmd }}"{{ if (gt (len $container.Command) $i) }},{{ end }}
+            "{{ hclescape $cmd }}"{{ if (gt (len $container.Command) $i) }},{{ end }}
             {{- end }}
           ]
           {{- end }}
@@ -63,7 +63,7 @@
           {{- if (gt (len $container.Args) 0) }}
           args = [
             {{- range $i, $arg := $container.Args }}
-            "{{ $arg }}"{{ if (gt (len $container.Args) $i) }},{{ end }}
+            "{{ hclescape $arg }}"{{ if (gt (len $container.Args) $i) }},{{ end }}
             {{- end }}
           ]{{- end }}
 
@@ -71,7 +71,7 @@
           liveness_probe {
             http_get {
               {{- if (ne $container.LivenessProbe.HttpGet.Path "") }}
-              path = "{{ $container.LivenessProbe.HttpGet.Path }}"
+              path = "{{ hclescape $container.LivenessProbe.HttpGet.Path }}"
               {{- end }}
               {{- if (ne $container.LivenessProbe.HttpGet.Port 0) }}
               port = {{ $container.LivenessProbe.HttpGet.Port }}
@@ -102,9 +102,9 @@
       uniform_bucket_level_access = true
     }
     resource "google_storage_bucket_object" "{{ $workloadName }}_source" {
-      name   = "{{ .BuildConfig.SourcePath }}"
+      name   = "{{ hclescape .BuildConfig.SourcePath }}"
       bucket = google_storage_bucket.{{ $workloadName }}_source.name
-      source = "{{ .BuildConfig.SourcePath }}"
+      source = "{{ hclescape .BuildConfig.SourcePath }}"
     }
     resource "google_service_account" "{{ $workloadName }}_build" {
       account_id = "{{ $workloadName }}_build"

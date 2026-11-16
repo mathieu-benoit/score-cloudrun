@@ -286,3 +286,91 @@ resource "google_service_account" "example" {
 }
 `, string(raw))
 }
+
+func TestGenerate_does_not_html_escape_variables_or_templates(t *testing.T) {
+	td := changeToTempDir(t)
+	_, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
+	require.NoError(t, err)
+
+	_ = os.Remove(filepath.Join(td, "score.yaml"))
+	require.NoError(t, os.WriteFile(filepath.Join(td, "score.yaml"), []byte(`
+apiVersion: score.dev/v1b1
+metadata:
+  name: example
+containers:
+  main:
+    image: nginx:latest
+    variables:
+      DATABASE_URL: "postgres://user:pass@10.0.0.2:5432/app?sslmode=require&connect_timeout=5"
+      LOG_FILTER: "severity>=WARNING && latency<500"
+resources:
+  custom:
+    type: custom
+`), 0644))
+
+	require.NoError(t, os.WriteFile(filepath.Join(td, ".score-cloudrun", "custom.provisioners.yaml"), []byte(`
+- uri: template://test/custom
+  type: custom
+  class: default
+  format: terraform
+  manifests: |
+    # Special characters like <, >, &, and " must not be HTML-escaped in HCL.
+    locals {
+      condition = (1 > 0 && 2 < 3) ? "yes" : "no"
+    }
+`), 0644))
+
+	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
+		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "us-east4", "--", "score.yaml",
+	})
+	require.NoError(t, err)
+	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
+	require.NoError(t, err)
+	content := string(raw)
+	assert.Contains(t, content, `value = "postgres://user:pass@10.0.0.2:5432/app?sslmode=require&connect_timeout=5"`)
+	assert.Contains(t, content, `value = "severity>=WARNING && latency<500"`)
+	assert.Contains(t, content, `condition = (1 > 0 && 2 < 3) ? "yes" : "no"`)
+	assert.NotContains(t, content, "&lt;")
+	assert.NotContains(t, content, "&gt;")
+	assert.NotContains(t, content, "&amp;")
+	assert.NotContains(t, content, "&#34;")
+}
+
+func TestGenerate_escapes_hcl_string_values(t *testing.T) {
+	td := changeToTempDir(t)
+	_, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
+	require.NoError(t, err)
+
+	_ = os.Remove(filepath.Join(td, "score.yaml"))
+	require.NoError(t, os.WriteFile(filepath.Join(td, "score.yaml"), []byte(`
+apiVersion: score.dev/v1b1
+metadata:
+  name: example
+containers:
+  main:
+    image: nginx:latest
+    command: ["sh", "-c"]
+    args: ["echo \"hi\" && exit 0"]
+    variables:
+      QUOTED: 'say "hi"'
+      BREAKOUT: 'x" } } resource "google_project_iam_member" "pwn" { role = "'
+      PATTERN: '\d+'
+      MULTILINE: "line1\nline2"
+      INTERPOLATED: '$${google_sql_user.user.name}'
+`), 0644))
+
+	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
+		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "us-east4", "--", "score.yaml",
+	})
+	require.NoError(t, err)
+	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
+	require.NoError(t, err)
+	content := string(raw)
+	assert.Contains(t, content, `value = "say \"hi\""`)
+	assert.Contains(t, content, `value = "x\" } } resource \"google_project_iam_member\" \"pwn\" { role = \""`)
+	assert.NotContains(t, content, `resource "google_project_iam_member"`)
+	assert.Contains(t, content, `value = "\\d+"`)
+	assert.Contains(t, content, `value = "line1\nline2"`)
+	assert.Contains(t, content, `value = "${google_sql_user.user.name}"`)
+	assert.Contains(t, content, `"echo \"hi\" && exit 0"`)
+}

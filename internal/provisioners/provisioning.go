@@ -17,14 +17,15 @@ package provisioners
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"log/slog"
 	"maps"
 	"slices"
+	"text/template"
 
 	"github.com/score-spec/score-go/framework"
 
 	"github.com/score-spec/score-cloudrun/internal/state"
+	"github.com/score-spec/score-cloudrun/internal/templatefuncs"
 )
 
 type Provisioner struct {
@@ -100,7 +101,7 @@ func ProvisionResources(currentState *state.State, provisioners []Provisioner, o
 }
 
 func generateResourceManifest(resourceTypeTemplate string, workloadName string, location string, projectId string) (string, error) {
-	t, err := template.New("template").Parse(resourceTypeTemplate)
+	t, err := template.New("template").Funcs(templatefuncs.FuncMap()).Parse(resourceTypeTemplate)
 	if err != nil {
 		return "", err
 	}
