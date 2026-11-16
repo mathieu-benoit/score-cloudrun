@@ -16,12 +16,17 @@ package profiles
 
 import (
 	"bytes"
+	"crypto/sha256"
 	_ "embed"
+	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -36,6 +41,12 @@ type Profile struct {
 
 const ProfilesFileSuffix = ".profiles.yaml"
 const DefaultProfileFileName = "default-terraform.profiles.yaml"
+
+// DefaultProfileName and DefaultProfileFormat identify the profile defined by the built-in default profile file.
+const (
+	DefaultProfileName   = "default"
+	DefaultProfileFormat = "terraform"
+)
 
 //go:embed default-terraform.profiles.yaml
 var defaultProfileContent string
@@ -94,4 +105,67 @@ func LoadProfiles(raw []byte, outputFormat string) ([]Profile, error) {
 		}
 	}
 	return out, nil
+}
+
+// HasCustomDefaultProfile reports whether a profile file in path, other than the built-in default profile file,
+// already defines the "default" profile for the format the built-in default profile targets.
+func HasCustomDefaultProfile(path string) (bool, error) {
+	items, err := os.ReadDir(path)
+	if err != nil {
+		return false, err
+	}
+	for _, item := range items {
+		if item.IsDir() || item.Name() == DefaultProfileFileName || !strings.HasSuffix(item.Name(), ProfilesFileSuffix) {
+			continue
+		}
+		raw, err := os.ReadFile(filepath.Join(path, item.Name()))
+		if err != nil {
+			return false, fmt.Errorf("failed to read '%s': %w", item.Name(), err)
+		}
+		loaded, err := LoadProfiles(raw, DefaultProfileFormat)
+		if err != nil {
+			return false, fmt.Errorf("failed to load '%s': %w", item.Name(), err)
+		}
+		for _, p := range loaded {
+			if p.Name == DefaultProfileName {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+// SaveProfileToDirectory validates and saves profile content from profileUrl into path, replacing older copies from the same source.
+func SaveProfileToDirectory(path string, profileUrl string, data []byte) error {
+	if _, err := LoadProfiles(data, ""); err != nil {
+		return fmt.Errorf("invalid profiles file: %w", err)
+	}
+	data = append([]byte(fmt.Sprintf("# Downloaded from %s at %s\n", profileUrl, time.Now())), data...)
+	hashValue := sha256.Sum256([]byte(profileUrl))
+	hashName := base64.RawURLEncoding.EncodeToString(hashValue[:16]) + ProfilesFileSuffix
+	timePrefix := base64.RawURLEncoding.EncodeToString(binary.BigEndian.AppendUint64([]byte{}, uint64(math.MaxInt64-time.Now().UnixNano())))
+
+	targetPath := filepath.Join(path, timePrefix+"."+hashName)
+	tmpPath := targetPath + ".tmp"
+	if err := os.WriteFile(tmpPath, data, 0600); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	} else if err := os.Rename(tmpPath, targetPath); err != nil {
+		return fmt.Errorf("failed to rename temp file: %w", err)
+	}
+	slog.Info(fmt.Sprintf("Wrote profile from '%s' to %s", profileUrl, targetPath))
+
+	items, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	for _, item := range items {
+		if strings.HasSuffix(item.Name(), hashName) && !strings.HasPrefix(item.Name(), timePrefix) {
+			if err := os.Remove(filepath.Join(path, item.Name())); err != nil {
+				return fmt.Errorf("failed to remove old copy of profile loaded from '%s': %w", profileUrl, err)
+			}
+			slog.Debug(fmt.Sprintf("Removed old copy of profile loaded from '%s'", profileUrl))
+		}
+	}
+
+	return nil
 }
