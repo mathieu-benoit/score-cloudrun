@@ -4,7 +4,7 @@
   format: terraform
   description: Generates a Cloud SQL (PostgreSQL) instance and database Terraform resource
   outputs:
-    host: "${google_sql_database_instance.instance.name}"
+    host: "${google_sql_database_instance.instance.public_ip_address}"
     database: "${google_sql_database.database.name}"
     port: 5432
     username: "${google_sql_user.user.name}"
@@ -19,7 +19,7 @@
 
     resource "google_sql_database_instance" "instance" {
       project          = "{{ .ProjectId }}"
-      name             = "instance-${random_string.memorystore_instance_name.result}"
+      name             = "instance-${random_string.postgres_instance_name.result}"
       region           = "{{ .Location }}"
       database_version = "POSTGRES_14"
       settings {

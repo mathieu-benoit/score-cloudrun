@@ -137,6 +137,9 @@ resource "google_cloud_run_v2_service" "example" {
     containers {
       name  = "main"
       image = "stefanprodan/podinfo"
+      ports {
+        container_port = 8080
+      }
     }
     vpc_access {
       network_interfaces {
@@ -248,6 +251,9 @@ resource "google_cloud_run_v2_service" "example" {
     containers {
       name  = "main"
       image = "stefanprodan/podinfo"
+      ports {
+        container_port = 8080
+      }
       env {
         name = "dynamic"
         value = "example"
@@ -373,4 +379,39 @@ containers:
 	assert.Contains(t, content, `value = "line1\nline2"`)
 	assert.Contains(t, content, `value = "${google_sql_user.user.name}"`)
 	assert.Contains(t, content, `"echo \"hi\" && exit 0"`)
+}
+
+func TestGenerate_skips_reserved_port_env_and_uses_target_port(t *testing.T) {
+	td := changeToTempDir(t)
+	_, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{"init"})
+	require.NoError(t, err)
+
+	_ = os.Remove(filepath.Join(td, "score.yaml"))
+	require.NoError(t, os.WriteFile(filepath.Join(td, "score.yaml"), []byte(`
+apiVersion: score.dev/v1b1
+metadata:
+  name: web
+containers:
+  app:
+    image: nginx:latest
+    variables:
+      PORT: "3000"
+      APP_MODE: production
+service:
+  ports:
+    web:
+      port: 80
+      targetPort: 3000
+`), 0644))
+
+	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
+		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "us-east4", "--", "score.yaml",
+	})
+	require.NoError(t, err)
+	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
+	require.NoError(t, err)
+	content := string(raw)
+	assert.Contains(t, content, "container_port = 3000")
+	assert.Contains(t, content, `name = "APP_MODE"`)
+	assert.NotContains(t, content, `name = "PORT"`)
 }
