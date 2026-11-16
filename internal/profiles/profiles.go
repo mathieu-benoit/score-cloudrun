@@ -16,12 +16,17 @@ package profiles
 
 import (
 	"bytes"
+	"crypto/sha256"
 	_ "embed"
+	"encoding/base64"
+	"encoding/binary"
 	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -94,4 +99,53 @@ func LoadProfiles(raw []byte, outputFormat string) ([]Profile, error) {
 		}
 	}
 	return out, nil
+}
+
+// HasDefaultProfile returns true if raw contains at least one profile named "default".
+func HasDefaultProfile(raw []byte) bool {
+	loaded, err := LoadProfiles(raw, "")
+	if err != nil {
+		return false
+	}
+	for _, p := range loaded {
+		if p.Name == "default" {
+			return true
+		}
+	}
+	return false
+}
+
+// SaveProfileToDirectory validates and saves profile content from profileUrl into path, replacing older copies from the same source.
+func SaveProfileToDirectory(path string, profileUrl string, data []byte) error {
+	if _, err := LoadProfiles(data, ""); err != nil {
+		return fmt.Errorf("invalid profiles file: %w", err)
+	}
+	data = append([]byte(fmt.Sprintf("# Downloaded from %s at %s\n", profileUrl, time.Now())), data...)
+	hashValue := sha256.Sum256([]byte(profileUrl))
+	hashName := base64.RawURLEncoding.EncodeToString(hashValue[:16]) + ProfilesFileSuffix
+	timePrefix := base64.RawURLEncoding.EncodeToString(binary.BigEndian.AppendUint64([]byte{}, uint64(math.MaxInt64-time.Now().UnixNano())))
+
+	targetPath := filepath.Join(path, timePrefix+"."+hashName)
+	tmpPath := targetPath + ".tmp"
+	if err := os.WriteFile(tmpPath, data, 0600); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	} else if err := os.Rename(tmpPath, targetPath); err != nil {
+		return fmt.Errorf("failed to rename temp file: %w", err)
+	}
+	slog.Info(fmt.Sprintf("Wrote profile from '%s' to %s", profileUrl, targetPath))
+
+	items, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	for _, item := range items {
+		if strings.HasSuffix(item.Name(), hashName) && !strings.HasPrefix(item.Name(), timePrefix) {
+			if err := os.Remove(filepath.Join(path, item.Name())); err != nil {
+				return fmt.Errorf("failed to remove old copy of profile loaded from '%s': %w", profileUrl, err)
+			}
+			slog.Debug(fmt.Sprintf("Removed old copy of profile loaded from '%s'", profileUrl))
+		}
+	}
+
+	return nil
 }
