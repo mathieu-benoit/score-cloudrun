@@ -26,12 +26,25 @@
         containers {
           name  = "{{ hclescape $containerName }}"
           image = "{{ hclescape $container.Image }}"
+          {{- if $.Spec.Service }}
+          {{- $firstPort := true }}
+          {{- range $portName, $port := $.Spec.Service.Ports }}
+          {{- if $firstPort }}
+          ports {
+            container_port = {{ if $port.TargetPort }}{{ $port.TargetPort }}{{ else }}{{ $port.Port }}{{ end }}
+          }
+          {{- $firstPort = false }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
           
           {{- range $variableName, $variableValue := $container.Variables }}
+          {{- if ne $variableName "PORT" }}
           env {
             name = "{{ hclescape $variableName }}"
             value = "{{ hclescape $variableValue }}"
-          }{{- end }}
+          }
+          {{- end }}{{- end }}
 
           {{- if (gt (len $container.Command) 0) }}
           command = [
