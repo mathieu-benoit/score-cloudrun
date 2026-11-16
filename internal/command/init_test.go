@@ -15,7 +15,10 @@
 package command
 
 import (
+	"bytes"
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -145,4 +148,71 @@ func TestInit_with_no_sample_provisioners_and_profiles(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, loadedProfiles, 1)
 	assert.Equal(t, "custom-default", loadedProfiles[0].Id)
+}
+
+func TestInit_custom_default_profile_for_other_format_keeps_builtin_default(t *testing.T) {
+	td := t.TempDir()
+	wd, _ := os.Getwd()
+	require.NoError(t, os.Chdir(td))
+	defer func() {
+		require.NoError(t, os.Chdir(wd))
+	}()
+
+	require.NoError(t, os.WriteFile(filepath.Join(td, "kcc.profiles.yaml"), []byte(`
+- id: kcc-default
+  name: default
+  format: kcc
+  manifests: |
+    # kcc {{ .WorkloadName }}
+`), 0644))
+
+	_, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{
+		"init", "--no-sample", "--profiles", "kcc.profiles.yaml",
+	})
+	require.NoError(t, err)
+
+	_, err = os.Stat(filepath.Join(td, state.DefaultRelativeStateDirectory, profiles.DefaultProfileFileName))
+	assert.NoError(t, err, "built-in terraform default profile should still be written")
+}
+
+func TestInit_rerun_without_profiles_keeps_custom_default_profile(t *testing.T) {
+	td := t.TempDir()
+	wd, _ := os.Getwd()
+	require.NoError(t, os.Chdir(td))
+	defer func() {
+		require.NoError(t, os.Chdir(wd))
+	}()
+
+	require.NoError(t, os.WriteFile(filepath.Join(td, "custom.profiles.yaml"), []byte(`
+- id: custom-default
+  name: default
+  format: terraform
+  manifests: |
+    # custom {{ .WorkloadName }}
+`), 0644))
+
+	_, _, err := executeAndResetCommand(context.Background(), rootCmd, []string{
+		"init", "--no-sample", "--profiles", "custom.profiles.yaml",
+	})
+	require.NoError(t, err)
+	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{"init", "--no-sample"})
+	require.NoError(t, err)
+
+	_, err = os.Stat(filepath.Join(td, state.DefaultRelativeStateDirectory, profiles.DefaultProfileFileName))
+	assert.ErrorIs(t, err, os.ErrNotExist)
+
+	loadedProfiles, err := profiles.LoadProfilesFromDirectory(state.DefaultRelativeStateDirectory, "terraform")
+	require.NoError(t, err)
+	require.Len(t, loadedProfiles, 1)
+	assert.Equal(t, "custom-default", loadedProfiles[0].Id)
+}
+
+func TestLoadFileOrURL_rejects_oversized_http_response(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(bytes.Repeat([]byte("a"), maxSourceFileBytes+1))
+	}))
+	defer srv.Close()
+
+	_, err := loadFileOrURL(context.Background(), srv.URL)
+	assert.ErrorContains(t, err, "byte limit")
 }

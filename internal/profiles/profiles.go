@@ -42,6 +42,12 @@ type Profile struct {
 const ProfilesFileSuffix = ".profiles.yaml"
 const DefaultProfileFileName = "default-terraform.profiles.yaml"
 
+// DefaultProfileName and DefaultProfileFormat identify the profile defined by the built-in default profile file.
+const (
+	DefaultProfileName   = "default"
+	DefaultProfileFormat = "terraform"
+)
+
 //go:embed default-terraform.profiles.yaml
 var defaultProfileContent string
 
@@ -101,18 +107,32 @@ func LoadProfiles(raw []byte, outputFormat string) ([]Profile, error) {
 	return out, nil
 }
 
-// HasDefaultProfile returns true if raw contains at least one profile named "default".
-func HasDefaultProfile(raw []byte) bool {
-	loaded, err := LoadProfiles(raw, "")
+// HasCustomDefaultProfile reports whether a profile file in path, other than the built-in default profile file,
+// already defines the "default" profile for the format the built-in default profile targets.
+func HasCustomDefaultProfile(path string) (bool, error) {
+	items, err := os.ReadDir(path)
 	if err != nil {
-		return false
+		return false, err
 	}
-	for _, p := range loaded {
-		if p.Name == "default" {
-			return true
+	for _, item := range items {
+		if item.IsDir() || item.Name() == DefaultProfileFileName || !strings.HasSuffix(item.Name(), ProfilesFileSuffix) {
+			continue
+		}
+		raw, err := os.ReadFile(filepath.Join(path, item.Name()))
+		if err != nil {
+			return false, fmt.Errorf("failed to read '%s': %w", item.Name(), err)
+		}
+		loaded, err := LoadProfiles(raw, DefaultProfileFormat)
+		if err != nil {
+			return false, fmt.Errorf("failed to load '%s': %w", item.Name(), err)
+		}
+		for _, p := range loaded {
+			if p.Name == DefaultProfileName {
+				return true, nil
+			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 // SaveProfileToDirectory validates and saves profile content from profileUrl into path, replacing older copies from the same source.

@@ -109,12 +109,18 @@ var initCmd = &cobra.Command{
 			if err := profiles.SaveProfileToDirectory(sd.Path, src, raw); err != nil {
 				return fmt.Errorf("failed to save profile '%s': %w", src, err)
 			}
-			if profiles.HasDefaultProfile(raw) {
-				disableDefaultProfile = true
-			}
 		}
 
-		if !disableDefaultProfile {
+		hasCustomDefaultProfile, err := profiles.HasCustomDefaultProfile(sd.Path)
+		if err != nil {
+			return fmt.Errorf("failed to check for a custom default workload profile: %w", err)
+		}
+
+		if disableDefaultProfile {
+			slog.Info("Skipping default workload profile due to --no-default-profile flag")
+		} else if hasCustomDefaultProfile {
+			slog.Info("Skipping default workload profile because a custom 'default' profile is already loaded", "format", profiles.DefaultProfileFormat)
+		} else {
 			defaultProfile := filepath.Join(sd.Path, profiles.DefaultProfileFileName)
 
 			if _, err := os.Stat(defaultProfile); err != nil {
@@ -141,8 +147,6 @@ var initCmd = &cobra.Command{
 			} else {
 				slog.Info("Default workload profile file already exists, skipping", "path", defaultProfile)
 			}
-		} else {
-			slog.Info("Skipping default workload profile due to --no-default-profile flag")
 		}
 
 		noSample, err := cmd.Flags().GetBool(initCmdNoSampleFlag)
@@ -186,6 +190,9 @@ var initCmd = &cobra.Command{
 	},
 }
 
+// maxSourceFileBytes caps the size of a provisioner or profile file loaded by init.
+const maxSourceFileBytes = 10 * 1024 * 1024
+
 func loadFileOrURL(ctx context.Context, src string) ([]byte, error) {
 	if strings.HasPrefix(src, "http://") || strings.HasPrefix(src, "https://") {
 		client := &http.Client{Timeout: 30 * time.Second}
@@ -201,7 +208,14 @@ func loadFileOrURL(ctx context.Context, src string) ([]byte, error) {
 		if resp.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf("unexpected HTTP status %s", resp.Status)
 		}
-		return io.ReadAll(resp.Body)
+		raw, err := io.ReadAll(io.LimitReader(resp.Body, maxSourceFileBytes+1))
+		if err != nil {
+			return nil, err
+		}
+		if len(raw) > maxSourceFileBytes {
+			return nil, fmt.Errorf("response exceeds %d byte limit", maxSourceFileBytes)
+		}
+		return raw, nil
 	}
 	return os.ReadFile(src)
 }
