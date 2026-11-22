@@ -15,7 +15,7 @@
     locals {
       network = "default"
     }
-    {{- range $resourceName, $resource := .Spec.Resources }}{{- if eq $resource.Type "route" }}{{- $exposedRouteEnabled := true }}{{- end }}{{- end }}
+    {{- range $resourceName, $resource := .Spec.Resources }}{{- if eq $resource.Type "route" }}{{- $exposedRouteEnabled = true }}{{- end }}{{- end }}
     resource "google_cloud_run_v2_service" "{{ $workloadName }}" {
       provider = {{ if not $exposedRouteEnabled }}google-beta{{ else }}google{{ end }}
       project = "{{ .ProjectId }}"

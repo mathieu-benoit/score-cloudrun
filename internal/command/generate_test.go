@@ -415,3 +415,37 @@ service:
 	assert.Contains(t, content, `name = "APP_MODE"`)
 	assert.NotContains(t, content, `name = "PORT"`)
 }
+
+func TestGenerate_route_resource_enables_default_uri(t *testing.T) {
+	routeProvisioners, err := filepath.Abs("../../examples/provisioners/route-terraform.provisioners.yaml")
+	require.NoError(t, err)
+	td := changeToTempDir(t)
+	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{"init", "--no-sample", "--provisioners", routeProvisioners})
+	require.NoError(t, err)
+
+	require.NoError(t, os.WriteFile(filepath.Join(td, "score.yaml"), []byte(`
+apiVersion: score.dev/v1b1
+metadata:
+  name: web
+containers:
+  app:
+    image: nginx:latest
+resources:
+  dns:
+    type: route
+    params:
+      host: example.com
+      path: /
+      port: 8080
+`), 0644))
+
+	_, _, err = executeAndResetCommand(context.Background(), rootCmd, []string{
+		"generate", "-o", "manifests.tf", "-p", "project-test", "-l", "us-east4", "--", "score.yaml",
+	})
+	require.NoError(t, err)
+	raw, err := os.ReadFile(filepath.Join(td, "manifests.tf"))
+	require.NoError(t, err)
+	content := string(raw)
+	assert.Contains(t, content, "provider = google\n")
+	assert.NotContains(t, content, "default_uri_disabled")
+}
